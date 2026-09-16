@@ -1,8 +1,16 @@
 # 1. Gunakan image dasar PHP versi cli
 FROM php:8.4-cli
 
-# 2. Instal depedensi sistem dasar dan ekstensi PHP
-RUN apt-get update && apt-get install -y libzip-dev zip unzip && docker-php-ext-install pdo pdo_mysql zip
+# 2. Instal dependensi sistem dan ekstensi PHP (termasuk gd untuk maatwebsite/excel)
+RUN apt-get update && apt-get install -y \
+    libzip-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    zip \
+    unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql zip gd
 
 # 3. Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

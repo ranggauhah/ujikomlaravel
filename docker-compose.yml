@@ -1,8 +1,10 @@
 services:
-  # 1. SERVER DATABASE
+
+  # 1. MySQL Database
   mysql-server:
     image: mysql:8.0
     container_name: MySQL-API
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: API_ujikom
       MYSQL_USER: api_ujikom
@@ -10,34 +12,57 @@ services:
       MYSQL_ROOT_PASSWORD: passwordroot
     ports:
       - "3306:3306"
-    networks:
-      - API-UJIKOM
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - API-UJIKOM
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppasswordroot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # 2. SERVER BACKEND (LARAVEL)
+  # 2. Laravel API Backend
   app-laravel:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: laravel-api
+    restart: unless-stopped
     working_dir: /var/www
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/var/www
-    command: php artisan serve --host=0.0.0.0 --port=8000
+    command: >
+      sh -c "composer install --no-interaction --prefer-dist &&
+             php artisan config:clear &&
+             php artisan migrate --force &&
+             php artisan serve --host=0.0.0.0 --port=8000"
     depends_on:
-      - mysql-server
+      mysql-server:
+        condition: service_healthy
     networks:
       - API-UJIKOM
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql-server
+      - DB_PORT=3306
+      - DB_DATABASE=API_ujikom
+      - DB_USERNAME=api_ujikom
+      - DB_PASSWORD=api_ujikom
 
-  # 3. SERVER UI DATABASE (PHPMYADMIN)
+  # 3. PhpMyAdmin (Database UI)
   phpmyadmin:
     image: phpmyadmin
     container_name: PhpMyAdmin-API
+    restart: unless-stopped
     environment:
       PMA_HOST: mysql-server
+      PMA_USER: api_ujikom
+      PMA_PASSWORD: api_ujikom
     ports:
       - "8081:80"
     depends_on:

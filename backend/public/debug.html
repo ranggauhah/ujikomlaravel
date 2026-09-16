@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Debug</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 { color: #00ff00; }
+        h2 { color: #ffff00; margin-top: 30px; }
+        .test-section {
+            background: #2d2d2d;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #00ff00;
+            border-radius: 4px;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .warning { color: #ffff00; }
+        .info { color: #00bfff; }
+        button {
+            background: #00ff00;
+            color: #1e1e1e;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        pre {
+            background: #000;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            color: #0f0;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-dot.green { background: #00ff00; }
+        .status-dot.red { background: #ff0000; }
+        .status-dot.yellow { background: #ffff00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐛 REAL-TIME DEBUG SYSTEM</h1>
+        <p>Debug tool untuk Sistem Peminjaman Alat</p>
+
+        <div class="test-section">
+            <h2>📊 SYSTEM STATUS</h2>
+            <div id="systemStatus">Checking...</div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔗 STEP 1: CHECK API CONNECTION</h2>
+            <button onclick="testAPIConnection()">Test API Connection</button>
+            <div id="apiResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔐 STEP 2: TEST LOGIN</h2>
+            <input type="email" id="testEmail" value="admin@example.com" style="padding: 8px; margin: 5px; background: #000; color: #0f0; border: 1px solid #0f0;">
+            <input type="password" id="testPassword" value="password" style="padding: 8px; margin: 5px; background: #000; color: #0f0; border: 1px solid #0f0;">
+            <br>
+            <button onclick="testLogin()">Test Login</button>
+            <button onclick="testLoginVerbose()">Verbose Login Test</button>
+            <div id="loginResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>💾 STEP 3: CHECK STORAGE</h2>
+            <button onclick="checkStorage()">Check LocalStorage</button>
+            <button onclick="clearStorage()">Clear Storage</button>
+            <div id="storageResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 STEP 4: TEST ALL ENDPOINTS</h2>
+            <button onclick="testAllEndpoints()">Test All Endpoints</button>
+            <div id="endpointsResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 CONSOLE LOG</h2>
+            <button onclick="clearLog()">Clear Log</button>
+            <pre id="consoleLog">Waiting for tests...</pre>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        let logContent = '';
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                success: '#00ff00',
+                error: '#ff0000',
+                warning: '#ffff00',
+                info: '#00bfff'
+            };
+            const color = colors[type] || colors.info;
+            
+            logContent += `[${timestamp}] <span style="color:${color}">${message}</span>\n`;
+            document.getElementById('consoleLog').innerHTML = logContent;
+            console.log(message);
+        }
+
+        function clearLog() {
+            logContent = '';
+            document.getElementById('consoleLog').innerHTML = 'Log cleared...';
+        }
+
+        // Auto-check on load
+        window.onload = function() {
+            checkSystemStatus();
+        };
+
+        function checkSystemStatus() {
+            const status = document.getElementById('systemStatus');
+            status.innerHTML = `
+                <div><span class="status-dot yellow"></span> Browser: ${navigator.userAgent.split(' ').pop()}</div>
+                <div><span class="status-dot yellow"></span> API URL: ${API_URL}</div>
+                <div><span class="status-dot yellow"></span> LocalStorage Available: ${typeof(Storage) !== "undefined" ? 'Yes' : 'No'}</div>
+                <div><span class="status-dot yellow"></span> Fetch API Available: ${typeof(fetch) !== "undefined" ? 'Yes' : 'No'}</div>
+            `;
+        }
+
+        async function testAPIConnection() {
+            const result = document.getElementById('apiResult');
+            result.innerHTML = '<p class="warning">⏳ Testing connection...</p>';
+            log('Testing API connection to: ' + API_URL, 'info');
+
+            try {
+                const response = await fetch(API_URL + '/auth/login', {
+                    method: 'OPTIONS',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                log('✅ API is reachable! Status: ' + response.status, 'success');
+                result.innerHTML = `
+                    <p class="success"><span class="status-dot green"></span>✅ API CONNECTION OK</p>
+                    <pre>Status: ${response.status}
+Headers: ${JSON.stringify([...response.headers.entries()], null, 2)}</pre>
+                `;
+            } catch (error) {
+                log('❌ API Connection Failed: ' + error.message, 'error');
+                result.innerHTML = `
+                    <p class="error"><span class="status-dot red"></span>❌ CONNECTION FAILED</p>
+                    <pre>Error: ${error.message}
+
+Possible causes:
+1. Laravel container not running
+2. Port 8000 not accessible
+3. CORS not configured
+4. Docker network issue</pre>
+                `;
+            }
+        }
+
+        async function testLogin() {
+            const result = document.getElementById('loginResult');
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+
+            result.innerHTML = '<p class="warning">⏳ Testing login...</p>';
+            log(`Testing login with: ${email}`, 'info');
+
+            try {
+                const response = await fetch(API_URL + '/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                log(`Login response status: ${response.status}`, response.ok ? 'success' : 'error');
+                log(`Response data: ${JSON.stringify(data)}`, 'info');
+
+                if (data.success || response.ok) {
+                    result.innerHTML = `
+                        <p class="success"><span class="status-dot green"></span>✅ LOGIN SUCCESS!</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    
+                    if (data.data && data.data.token) {
+                        localStorage.setItem('token', data.data.token);
+                        localStorage.setItem('user', JSON.stringify(data.data.user));
+                        log('✅ Token saved to localStorage', 'success');
+                    }
+                } else {
+                    result.innerHTML = `
+                        <p class="error"><span class="status-dot red"></span>❌ LOGIN FAILED</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                log('❌ Login Error: ' + error.message, 'error');
+                result.innerHTML = `
+                    <p class="error"><span class="status-dot red"></span>❌ LOGIN ERROR</p>
+                    <pre>Error: ${error.message}</pre>
+                `;
+            }
+        }
+
+        async function testLoginVerbose() {
+            const result = document.getElementById('loginResult');
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+
+            result.innerHTML = '<p class="warning">⏳ Verbose login test...</p>';
+            log('=== VERBOSE LOGIN TEST START ===', 'info');
+            log(`Email: ${email}`, 'info');
+            log(`Password: ${password}`, 'info');
+            log(`API URL: ${API_URL}/auth/login`, 'info');
+
+            const requestBody = { email, password };
+            log(`Request Body: ${JSON.stringify(requestBody)}`, 'info');
+
+            try {
+                log('Sending request...', 'info');
+                const response = await fetch(API_URL + '/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                log(`Response status: ${response.status}`, response.ok ? 'success' : 'error');
+                log(`Response headers:`, 'info');
+                response.headers.forEach((value, key) => {
+                    log(`  ${key}: ${value}`, 'info');
+                });
+
+                const contentType = response.headers.get('content-type');
+                log(`Content-Type: ${contentType}`, 'info');
+
+                const text = await response.text();
+                log(`Raw response: ${text.substring(0, 500)}...`, 'info');
+
+                try {
+                    const data = JSON.parse(text);
+                    log(`Parsed JSON:`, 'info');
+                    log(JSON.stringify(data, null, 2), 'info');
+
+                    result.innerHTML = `
+                        <p class="success"><span class="status-dot green"></span>Response received</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                        <p>Check console log above for detailed info</p>
+                    `;
+                } catch (e) {
+                    log(`❌ Failed to parse JSON: ${e.message}`, 'error');
+                    log(`Response was: ${text}`, 'error');
+                    result.innerHTML = `
+                        <p class="error"><span class="status-dot red"></span>❌ Invalid JSON Response</p>
+                        <pre>${text}</pre>
+                    `;
+                }
+            } catch (error) {
+                log(`❌ Network Error: ${error.message}`, 'error');
+                log(`Error stack: ${error.stack}`, 'error');
+                result.innerHTML = `
+                    <p class="error"><span class="status-dot red"></span>❌ NETWORK ERROR</p>
+                    <pre>${error.message}\n\n${error.stack}</pre>
+                `;
+            }
+
+            log('=== VERBOSE LOGIN TEST END ===', 'info');
+        }
+
+        function checkStorage() {
+            const result = document.getElementById('storageResult');
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+
+            log('Checking localStorage...', 'info');
+            log(`Token exists: ${!!token}`, token ? 'success' : 'warning');
+            log(`User exists: ${!!user}`, user ? 'success' : 'warning');
+
+            result.innerHTML = `
+                <pre>Token: ${token ? token.substring(0, 50) + '...' : 'NOT FOUND'}
+
+User: ${user || 'NOT FOUND'}
+
+All localStorage keys:
+${Object.keys(localStorage).join('\n')}</pre>
+            `;
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            log('✅ LocalStorage cleared', 'success');
+            checkStorage();
+        }
+
+        async function testAllEndpoints() {
+            const result = document.getElementById('endpointsResult');
+            result.innerHTML = '<p class="warning">⏳ Testing all endpoints...</p>';
+            log('=== TESTING ALL ENDPOINTS ===', 'info');
+
+            const token = localStorage.getItem('token');
+            const endpoints = [
+                { name: 'Login', method: 'POST', url: '/auth/login', auth: false },
+                { name: 'Register', method: 'POST', url: '/auth/register', auth: false },
+                { name: 'Kategori Alat', method: 'GET', url: '/kategori-alat', auth: true },
+                { name: 'Alat', method: 'GET', url: '/alat', auth: true },
+                { name: 'Peminjaman', method: 'GET', url: '/peminjaman', auth: true },
+                { name: 'Users', method: 'GET', url: '/users', auth: true },
+            ];
+
+            let html = '<table style="width:100%; color: #0f0;"><tr><th>Endpoint</th><th>Status</th><th>Response</th></tr>';
+
+            for (const endpoint of endpoints) {
+                log(`Testing: ${endpoint.method} ${endpoint.url}`, 'info');
+
+                try {
+                    const headers = { 'Accept': 'application/json' };
+                    if (endpoint.auth && token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+
+                    const response = await fetch(API_URL + endpoint.url, {
+                        method: endpoint.method,
+                        headers
+                    });
+
+                    const status = response.status;
+                    const statusClass = status < 400 ? 'success' : 'error';
+
+                    log(`  Status: ${status}`, status < 400 ? 'success' : 'error');
+
+                    html += `<tr>
+                        <td>${endpoint.name}</td>
+                        <td class="${statusClass}">${status}</td>
+                        <td>${status < 400 ? '✅' : '❌'}</td>
+                    </tr>`;
+                } catch (error) {
+                    log(`  Error: ${error.message}`, 'error');
+                    html += `<tr>
+                        <td>${endpoint.name}</td>
+                        <td class="error">ERROR</td>
+                        <td>❌ ${error.message}</td>
+                    </tr>`;
+                }
+            }
+
+            html += '</table>';
+            result.innerHTML = html;
+            log('=== ENDPOINT TESTING COMPLETE ===', 'info');
+        }
+    </script>
+</body>
+</html>
