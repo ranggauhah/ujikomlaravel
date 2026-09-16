@@ -46,11 +46,11 @@ class PengembalianController extends Controller
                 ], 403);
             }
 
-            // Hanya bisa dikembalikan jika status dipinjam
-            if ($peminjaman->status !== 'dipinjam') {
+            // Hanya bisa dikembalikan jika status dipinjam atau terlambat
+            if (!in_array($peminjaman->status, ['dipinjam', 'terlambat'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Hanya peminjaman berstatus "dipinjam" yang bisa dikembalikan.',
+                    'message' => 'Hanya peminjaman berstatus "dipinjam" atau "terlambat" yang bisa dikembalikan.',
                 ], 400);
             }
 
