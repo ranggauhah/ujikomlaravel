@@ -18,7 +18,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // MySQL: ubah enum dengan MODIFY COLUMN
+        // SQLite tidak mendukung MODIFY COLUMN — schema sudah lengkap di migration awal saat testing
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE peminjaman MODIFY COLUMN status 
             ENUM('menunggu','dipinjam','dikembalikan','terlambat','ditolak') 
             NOT NULL DEFAULT 'menunggu'");
@@ -26,6 +30,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE peminjaman MODIFY COLUMN status 
             ENUM('dipinjam','dikembalikan','terlambat') 
             NOT NULL DEFAULT 'dipinjam'");
