@@ -64,4 +64,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(LogAktivitas::class);
     }
+
+    /**
+     * Relasi ke Notifikasi milik user ini
+     */
+    public function notifikasi()
+    {
+        return $this->hasMany(Notifikasi::class);
+    }
 }

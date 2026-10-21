@@ -47,4 +47,12 @@ class Peminjaman extends Model
     {
         return $this->hasOne(Pengembalian::class, 'peminjaman_id');
     }
+
+    /**
+     * Relasi ke Notifikasi terkait peminjaman ini
+     */
+    public function notifikasi()
+    {
+        return $this->hasMany(Notifikasi::class);
+    }
 }

@@ -20,7 +20,7 @@
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <div>
                         <h1 style="color: white; margin-bottom: 10px; font-size: 32px; font-weight: 700;">
-                            Selamat Datang, <span id="welcomeName">User</span>! 👋
+                            Selamat Datang, <span id="welcomeName">User</span>!
                         </h1>
                         <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 16px;">
                             Sistem Manajemen Peminjaman Alat - Dashboard Overview
@@ -33,7 +33,7 @@
             </div>
         </div>
 
-        <!-- Stats Cards -->
+        <!-- Stats Cards — Baris 1 -->
         <div class="stats-grid">
             <div class="stat-card gradient-primary">
                 <div class="stat-icon">
@@ -92,6 +92,53 @@
             </div>
         </div>
 
+        <!-- Stats Cards — Baris 2: Menunggu Persetujuan & Terlambat -->
+        <div class="stats-grid" style="margin-bottom:32px;" id="statsRow2">
+            <div class="stat-card gradient-warning" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                <div class="stat-icon">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="menungguPersetujuan">0</div>
+                    <div class="stat-label">Menunggu Persetujuan</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-user-clock"></i>
+                        <span>Perlu ditinjau</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card gradient-danger">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalTerlambat">0</div>
+                    <div class="stat-label">Terlambat</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-calendar-times"></i>
+                        <span>Lewat batas kembali</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kartu notifikasi belum dibaca (ditampilkan untuk semua role) -->
+            <div class="stat-card" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;cursor:pointer;"
+                 onclick="window.location.href='/notifikasi'">
+                <div class="stat-icon" style="background:rgba(255,255,255,0.2);">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="notifUnreadDash">0</div>
+                    <div class="stat-label">Notifikasi Belum Dibaca</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-right"></i>
+                        <span>Lihat semua →</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Recent Activities -->
         <div class="card">
             <div class="card-header">
@@ -137,32 +184,79 @@
     if (!user) return; // initUserUI sudah redirect ke '/' jika tidak login
     document.getElementById('welcomeName').textContent = user.name;
 
+    /*
+    | Dashboard per role:
+    | Admin   : Total Alat, Total Peminjaman, Sedang Dipinjam, Total User,
+    |           Menunggu Persetujuan, Terlambat, Notifikasi
+    | Petugas : Total Alat, Total Peminjaman, Sedang Dipinjam, Menunggu, Terlambat, Notifikasi
+    |           (tidak tampil Total User karena petugas tidak kelola user)
+    | Peminjam: Peminjaman Saya, Sedang Dipinjam Saya, Notifikasi
+    */
+
+    // Sembunyikan kartu Total User untuk non-admin
+    if (user.role !== 'admin') {
+        const cardUsers = document.getElementById('totalUsers');
+        if (cardUsers) {
+            const card = cardUsers.closest('.stat-card');
+            if (card) card.style.display = 'none';
+        }
+    }
+
+    // Sembunyikan baris 2 stats (Menunggu+Terlambat) untuk peminjam
+    if (user.role === 'peminjam') {
+        const row2 = document.getElementById('statsRow2');
+        if (row2) row2.style.display = 'none';
+    }
+
     // Load dashboard data
     async function loadDashboard() {
         try {
-            // Load stats
-            const [alatRes, peminjamanRes, usersRes] = await Promise.all([
-                fetch(`${API_URL}/alat`, {
-                    headers: { 'Authorization': `Bearer ${getToken()}` }
-                }),
-                fetch(`${API_URL}/peminjaman`, {
-                    headers: { 'Authorization': `Bearer ${getToken()}` }
-                }),
-                fetch(`${API_URL}/users`, {
-                    headers: { 'Authorization': `Bearer ${getToken()}` }
-                }).catch(() => ({ json: async () => ({ data: [] }) }))
-            ]);
+            // Semua role butuh alat & peminjaman
+            const fetchList = [
+                fetch(`${API_URL}/alat`,        { headers: { 'Authorization': `Bearer ${getToken()}` } }),
+                fetch(`${API_URL}/peminjaman`,   { headers: { 'Authorization': `Bearer ${getToken()}` } }),
+            ];
 
-            const alatData = await alatRes.json();
-            const peminjamanData = await peminjamanRes.json();
-            const usersData = await usersRes.json();
+            // Hanya admin yang fetch /users
+            if (user.role === 'admin') {
+                fetchList.push(
+                    fetch(`${API_URL}/users`, { headers: { 'Authorization': `Bearer ${getToken()}` } })
+                    .catch(() => ({ json: async () => ({ data: [] }) }))
+                );
+            }
 
-            // Update stats
+            const results     = await Promise.all(fetchList);
+            const alatData    = await results[0].json();
+            const peminjamanData = await results[1].json();
+            const usersData   = user.role === 'admin' ? await results[2].json() : { data: [] };
+
+            // Update stats baris 1
             document.getElementById('totalAlat').textContent = alatData.data?.length || 0;
             document.getElementById('totalPeminjaman').textContent = peminjamanData.data?.length || 0;
             document.getElementById('sedangDipinjam').textContent = 
                 peminjamanData.data?.filter(p => p.status === 'dipinjam').length || 0;
             document.getElementById('totalUsers').textContent = usersData.data?.length || 0;
+
+            // Update stats baris 2 — Menunggu & Terlambat
+            document.getElementById('menungguPersetujuan').textContent =
+                peminjamanData.data?.filter(p => p.status === 'menunggu').length || 0;
+            document.getElementById('totalTerlambat').textContent =
+                peminjamanData.data?.filter(p => p.status === 'terlambat').length || 0;
+
+            // Notifikasi belum dibaca
+            try {
+                const notifRes  = await fetch(`${API_URL}/notifikasi/unread`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const notifData = await notifRes.json();
+                if (notifData.success) {
+                    document.getElementById('notifUnreadDash').textContent =
+                        notifData.total_unread || 0;
+                    // Sinkron ke cache topbar agar badge lonceng juga langsung terupdate
+                    window._notifUnreadCount = notifData.total_unread || 0;
+                    window._notifCache       = notifData.data || [];
+                }
+            } catch (_) { /* silent */ }
 
             // Load recent peminjaman
             const tbody = document.getElementById('recentPeminjaman');

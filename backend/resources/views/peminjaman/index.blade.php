@@ -587,7 +587,7 @@
                     <stop offset='100%' style='stop-color:%23${c2}'/>
                 </linearGradient></defs>
                 <rect width='300' height='300' fill='url(%23g)'/>
-                <text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-size='90' opacity='0.7'>🔧</text>
+                <text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-size='90' opacity='0.7'></text>
             </svg>`
         )}`;
     }
@@ -734,6 +734,9 @@
             const bolehBatalkan = !sudahKembali
                 && (p.status === 'dipinjam' || p.status === 'menunggu')
                 && user.role === 'admin';
+            // Admin bisa hapus riwayat yang sudah selesai (dikembalikan / ditolak)
+            const bolehHapusRiwayat = (p.status === 'dikembalikan' || p.status === 'ditolak')
+                && user.role === 'admin';
             // Petugas & Admin bisa approve/tolak peminjaman yang masih menunggu
             const bolehApprove = p.status === 'menunggu'
                 && (user.role === 'admin' || user.role === 'petugas');
@@ -776,6 +779,13 @@
                                 onclick="showDetail(${p.id})" title="Detail">
                             <i class="fas fa-eye"></i>
                         </button>
+                        ${bolehHapusRiwayat ? `
+                        <button class="btn-icon btn-delete"
+                                onclick="hapusRiwayat(${p.id})"
+                                title="Hapus Riwayat"
+                                style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>` : ''}
                         ${bolehApprove ? `
                         <button class="btn-icon" onclick="approvePeminjaman(${p.id})"
                                 title="Setujui"
@@ -975,6 +985,32 @@
         }
     });
 
+    /* ─── Hapus riwayat selesai (dikembalikan / ditolak) ──────────────── */
+    async function hapusRiwayat(id) {
+        const p = allPeminjaman.find(x => x.id === id);
+        const nama = p ? (p.user?.name || `#${id}`) : `#${id}`;
+        const statusLabel = p?.status === 'dikembalikan' ? 'sudah dikembalikan' : 'ditolak';
+        if (!confirm(`Hapus riwayat peminjaman #${id} dari ${nama} (${statusLabel})?\n\nData akan terhapus permanen dan tidak bisa dikembalikan.`)) return;
+
+        try {
+            const res  = await fetch(`${API_URL}/peminjaman/${id}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${getToken()}` }
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                await loadPeminjaman();
+                showToast?.('Riwayat berhasil dihapus', 'success');
+            } else {
+                alert(data.message || 'Gagal menghapus riwayat');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Terjadi kesalahan koneksi');
+        }
+    }
+
     /* ─── Batalkan peminjaman (kembalikan stok) ────────────────────────── */
     async function batalkanPeminjaman(id) {
         const p = allPeminjaman.find(x => x.id === id);
@@ -1151,6 +1187,7 @@
     window.showAddModal       = showAddModal;
     window.showDetail         = showDetail;
     window.closeModal         = closeModal;
+    window.hapusRiwayat       = hapusRiwayat;
     window.batalkanPeminjaman = batalkanPeminjaman;
     window.approvePeminjaman  = approvePeminjaman;
     window.tolakPeminjaman    = tolakPeminjaman;

@@ -205,7 +205,8 @@
 
     const user = initUserUI();
     if (!user) return;
-    if (user.role !== 'admin' && user.role !== 'petugas') {
+    // Laporan hanya untuk Petugas
+    if (user.role !== 'petugas') {
         window.location.href = '/dashboard';
         return;
     }
@@ -473,65 +474,74 @@
             `;
         }).join('');
 
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>Laporan Peminjaman ${awal} s/d ${akhir}</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 40px; color: #111; }
-                    h1 { color: #4f46e5; margin-bottom: 4px; }
-                    .subtitle { color: #6b7280; margin-bottom: 24px; font-size: 14px; }
-                    .summary { display: flex; gap: 24px; margin-bottom: 28px; }
-                    .sum-box { padding: 16px 24px; border-radius: 10px; min-width: 120px; text-align: center; }
-                    .sum-box .val { font-size: 28px; font-weight: 700; }
-                    .sum-box .lbl { font-size: 12px; margin-top: 4px; }
-                    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-                    th { background: #4f46e5; color: white; padding: 12px; text-align: left; }
-                    tr:nth-child(even) { background: #f9fafb; }
-                    .footer { margin-top: 32px; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 16px; }
-                    @media print { .no-print { display: none; } }
-                </style>
-            </head>
-            <body>
-                <h1>Laporan Peminjaman Alat</h1>
-                <div class="subtitle">Periode: ${awal} s/d ${akhir} &nbsp;|&nbsp; Dicetak: ${new Date().toLocaleDateString('id-ID')}</div>
-                <div class="summary">
-                    <div class="sum-box" style="background:#ede9fe; color:#4f46e5;">
-                        <div class="val">${filtered.length}</div><div class="lbl">Total Transaksi</div>
-                    </div>
-                    <div class="sum-box" style="background:#d1fae5; color:#065f46;">
-                        <div class="val">${selesai}</div><div class="lbl">Selesai</div>
-                    </div>
-                    <div class="sum-box" style="background:#fef3c7; color:#92400e;">
-                        <div class="val">${proses}</div><div class="lbl">Dalam Proses</div>
-                    </div>
-                    <div class="sum-box" style="background:#fee2e2; color:#991b1b;">
-                        <div class="val">${terlambat}</div><div class="lbl">Terlambat</div>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Tgl Pinjam</th>
-                            <th>Tgl Kembali</th>
-                            <th>Peminjam</th>
-                            <th>Keperluan</th>
-                            <th>Durasi</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-                <div class="footer">Sistem Peminjaman Alat &mdash; Laporan dibuat otomatis</div>
-                <script>window.onload = () => { window.print(); }<\/script>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
+        const htmlContent = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Laporan Peminjaman ${awal} s/d ${akhir}</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; margin: 40px; color: #111; }
+        h1 { color: #4f46e5; margin-bottom: 4px; }
+        .subtitle { color: #6b7280; margin-bottom: 24px; font-size: 14px; }
+        .summary { display: flex; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
+        .sum-box { padding: 16px 24px; border-radius: 10px; min-width: 120px; text-align: center; }
+        .sum-box .val { font-size: 28px; font-weight: 700; }
+        .sum-box .lbl { font-size: 12px; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #4f46e5; color: white; padding: 12px; text-align: left; }
+        tr:nth-child(even) { background: #f9fafb; }
+        .footer { margin-top: 32px; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <h1>Laporan Peminjaman Alat</h1>
+    <div class="subtitle">Periode: ${awal} s/d ${akhir} &nbsp;|&nbsp; Dicetak: ${new Date().toLocaleDateString('id-ID')}</div>
+    <div class="summary">
+        <div class="sum-box" style="background:#ede9fe; color:#4f46e5;">
+            <div class="val">${filtered.length}</div><div class="lbl">Total Transaksi</div>
+        </div>
+        <div class="sum-box" style="background:#d1fae5; color:#065f46;">
+            <div class="val">${selesai}</div><div class="lbl">Selesai</div>
+        </div>
+        <div class="sum-box" style="background:#fef3c7; color:#92400e;">
+            <div class="val">${proses}</div><div class="lbl">Dalam Proses</div>
+        </div>
+        <div class="sum-box" style="background:#fee2e2; color:#991b1b;">
+            <div class="val">${terlambat}</div><div class="lbl">Terlambat</div>
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Tgl Pinjam</th>
+                <th>Tgl Kembali</th>
+                <th>Peminjam</th>
+                <th>Keperluan</th>
+                <th>Durasi</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+    </table>
+    <div class="footer">Sistem Peminjaman Alat &mdash; Laporan dibuat otomatis</div>
+</body>
+</html>`;
+
+        // Gunakan data URI dengan charset UTF-8 agar encoding terjaga dengan benar
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const blobUrl = URL.createObjectURL(blob);
+        const printWindow = window.open(blobUrl, '_blank');
+        if (printWindow) {
+            printWindow.onload = function() {
+                setTimeout(() => {
+                    printWindow.print();
+                    URL.revokeObjectURL(blobUrl);
+                }, 300);
+            };
+        }
     }
 
     // Expose ke window — dibutuhkan karena onclick di HTML memanggil dari luar IIFE

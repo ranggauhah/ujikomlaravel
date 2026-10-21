@@ -7,6 +7,7 @@ use App\Http\Resources\PeminjamanResource;
 use App\Models\Alat;
 use App\Models\DetailPinjam;
 use App\Models\Peminjaman;
+use App\Services\NotifikasiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -71,6 +72,9 @@ class PeminjamanController extends Controller
             DB::commit();
 
             $peminjaman->load(['user', 'detailPinjam.alat']);
+
+            // Kirim notifikasi pengajuan ke admin & petugas
+            (new NotifikasiService())->pengajuanBaru($peminjaman);
 
             return response()->json([
                 'success' => true,
@@ -154,6 +158,9 @@ class PeminjamanController extends Controller
 
             $peminjaman->load(['user', 'detailPinjam.alat']);
 
+            // Kirim notifikasi disetujui ke peminjam
+            (new NotifikasiService())->disetujui($peminjaman);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Peminjaman berhasil disetujui',
@@ -198,6 +205,9 @@ class PeminjamanController extends Controller
 
             $peminjaman->load(['user', 'detailPinjam.alat']);
 
+            // Kirim notifikasi ditolak ke peminjam
+            (new NotifikasiService())->ditolak($peminjaman);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Peminjaman berhasil ditolak',
@@ -214,18 +224,27 @@ class PeminjamanController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     *
+     * - Status aktif (dipinjam, menunggu) : kembalikan stok dulu, lalu hapus
+     * - Status selesai (dikembalikan, ditolak) : stok sudah dikembalikan,
+     *   langsung hapus riwayat tanpa ubah stok
      */
     public function destroy(Peminjaman $peminjaman)
     {
         try {
             DB::beginTransaction();
 
-            // Kembalikan stok alat
-            foreach ($peminjaman->detailPinjam as $detail) {
-                $alat = Alat::find($detail->alat_id);
-                $alat->update([
-                    'jumlah' => $alat->jumlah + $detail->jumlah_pinjam,
-                ]);
+            // Hanya kembalikan stok jika alat masih belum dikembalikan/ditolak
+            $statusAktif = in_array($peminjaman->status, ['dipinjam', 'menunggu']);
+            if ($statusAktif) {
+                foreach ($peminjaman->detailPinjam as $detail) {
+                    $alat = Alat::find($detail->alat_id);
+                    if ($alat) {
+                        $alat->update([
+                            'jumlah' => $alat->jumlah + $detail->jumlah_pinjam,
+                        ]);
+                    }
+                }
             }
 
             $peminjaman->delete();
@@ -234,7 +253,7 @@ class PeminjamanController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Peminjaman berhasil dihapus',
+                'message' => 'Riwayat peminjaman berhasil dihapus',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();

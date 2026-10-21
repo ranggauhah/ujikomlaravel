@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             KategoriAlatSeeder::class,
             AlatSeeder::class,
             PeminjamanSeeder::class,
+            NotifikasiSeeder::class,   // Contoh notifikasi untuk tiap role
         ]);
     }
 }

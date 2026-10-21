@@ -173,7 +173,8 @@
     if (!getToken()) { window.location.href = '/'; return; }
     const user = initUserUI();
     if (!user) return;
-    // Halaman ini hanya untuk admin & petugas
+    // Halaman Pengembalian untuk Admin & Petugas
+    // Peminjam tidak boleh akses halaman ini
     if (user.role === 'peminjam') { window.location.href = '/dashboard'; return; }
 
     /* ─── State ─────────────────────────────────────────────────────────── */
@@ -310,7 +311,7 @@
                 </td>
                 <td>${statusBadge(p)}</td>
                 <td>
-                    ${!sudahKembali
+                    ${!sudahKembali && user.role === 'petugas'
                         ? `<button class="btn btn-success btn-sm"
                                    onclick="bukaModalKembalikan(${p.id})"
                                    style="white-space:nowrap;padding:8px 14px;
@@ -319,8 +320,12 @@
                                           font-weight:600;font-size:13px;">
                                <i class="fas fa-undo-alt"></i> Kembalikan
                            </button>`
-                        : `<span style="color:var(--gray-400);font-size:13px;">
+                        : sudahKembali
+                        ? `<span style="color:var(--gray-400);font-size:13px;">
                                <i class="fas fa-check"></i> Selesai
+                           </span>`
+                        : `<span style="color:var(--gray-400);font-size:13px;">
+                               <i class="fas fa-eye"></i> Menunggu Petugas
                            </span>`}
                 </td>
             </tr>`;

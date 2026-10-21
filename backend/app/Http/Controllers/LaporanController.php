@@ -156,16 +156,20 @@ class LaporanController extends Controller
     public function logAktivitas(Request $request)
     {
         $request->validate([
-            'tanggal_mulai' => 'nullable|date',
-            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
-            'user_id' => 'nullable|exists:users,id',
-            'aksi' => 'nullable|in:create,update,delete',
+            'tanggal_mulai'  => 'nullable|date',
+            'tanggal_selesai'=> 'nullable|date|after_or_equal:tanggal_mulai',
+            'user_id'        => 'nullable|exists:users,id',
+            'aksi'           => 'nullable|in:create,update,delete',
+            'tabel'          => 'nullable|string|max:100',
         ]);
 
         $query = LogAktivitas::with('user');
 
         if ($request->tanggal_mulai && $request->tanggal_selesai) {
-            $query->whereBetween('created_at', [$request->tanggal_mulai, $request->tanggal_selesai]);
+            $query->whereBetween('created_at', [
+                $request->tanggal_mulai . ' 00:00:00',
+                $request->tanggal_selesai . ' 23:59:59',
+            ]);
         }
 
         if ($request->user_id) {
@@ -176,11 +180,15 @@ class LaporanController extends Controller
             $query->where('aksi', $request->aksi);
         }
 
+        if ($request->tabel) {
+            $query->where('tabel', $request->tabel);
+        }
+
         $logs = $query->latest()->get();
 
         return response()->json([
             'success' => true,
-            'data' => $logs,
+            'data'    => $logs,
         ]);
     }
 }

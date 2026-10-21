@@ -204,9 +204,11 @@
     const user = initUserUI();
     if (!user) return;
 
-    if (user.role === 'peminjam') document.getElementById('btnTambah').style.display = 'none';
-    // Petugas hanya bisa lihat alat, tidak bisa tambah/edit/hapus
-    if (user.role === 'petugas') document.getElementById('btnTambah').style.display = 'none';
+    // Hanya Admin yang bisa tambah/edit/hapus alat.
+    // Petugas & Peminjam hanya bisa melihat daftar alat.
+    if (user.role !== 'admin') {
+        document.getElementById('btnTambah').style.display = 'none';
+    }
 
     let allAlat   = [];
     let categories = [];
@@ -364,7 +366,7 @@
             </linearGradient></defs>
             <rect width='200' height='200' fill='url(%23g${id})' rx='12'/>
             <text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle'
-                  font-family='sans-serif' font-size='72' opacity='0.85'>🔧</text>
+                  font-family='sans-serif' font-size='72' opacity='0.85'></text>
         </svg>`;
         return 'data:image/svg+xml,' + encodeURIComponent(svg);
     }

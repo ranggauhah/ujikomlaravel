@@ -40,4 +40,12 @@ Route::middleware(['web'])->group(function () {
     Route::get('/laporan', function () {
         return view('laporan.index');
     })->name('laporan');
+
+    Route::get('/log-aktivitas', function () {
+        return view('log-aktivitas.index');
+    })->name('log-aktivitas');
+
+    Route::get('/notifikasi', function () {
+        return view('notifikasi.index');
+    })->name('notifikasi');
 });

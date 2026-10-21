@@ -4,6 +4,7 @@ use App\Http\Controllers\AlatController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KategoriAlatController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PeminjamanController;
 use App\Http\Controllers\PengembalianController;
 use App\Http\Controllers\UserController;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-| Hak Akses sesuai Tabel Modul UJIKOM:
+| Hak Akses 
 |
 | Admin   : Login, Logout, CRUD User, CRUD Alat, CRUD Kategori,
 |           CRUD Peminjaman, CRUD Pengembalian, Log Aktivitas
@@ -82,10 +83,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('pengembalian/{pengembalian}',    [PengembalianController::class, 'show']);
 
     // Peminjam: ajukan pengembalian sendiri
-    Route::post('pengembalian',                 [PengembalianController::class, 'store']);
+    Route::middleware('role:peminjam')->group(function () {
+        Route::post('pengembalian', [PengembalianController::class, 'store']);
+    });
 
-    // Admin & Petugas: konfirmasi / update / hapus pengembalian
-    Route::middleware('role:admin,petugas')->group(function () {
+    // Petugas: konfirmasi / update / hapus pengembalian
+    Route::middleware('role:petugas')->group(function () {
         Route::put('pengembalian/{pengembalian}',    [PengembalianController::class, 'update']);
         Route::delete('pengembalian/{pengembalian}', [PengembalianController::class, 'destroy']);
     });
@@ -103,5 +106,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('user',             [LaporanController::class, 'user']);
         Route::get('log-aktivitas',    [LaporanController::class, 'logAktivitas']);
         Route::get('export-peminjaman',[LaporanController::class, 'exportPeminjaman']);
+    });
+
+    // ── Notifikasi: semua role authenticated ──────────────────────────────
+    Route::prefix('notifikasi')->group(function () {
+        Route::get('/',               [NotifikasiController::class, 'index']);
+        Route::get('/unread',         [NotifikasiController::class, 'getUnread']);
+        Route::post('/read-all',      [NotifikasiController::class, 'markAllRead']);
+        Route::delete('/hapus-semua', [NotifikasiController::class, 'destroyAll']);
+        Route::patch('/{notifikasi}/read',   [NotifikasiController::class, 'markRead']);
+        Route::delete('/{notifikasi}',       [NotifikasiController::class, 'destroy']);
     });
 });

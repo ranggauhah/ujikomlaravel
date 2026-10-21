@@ -160,7 +160,9 @@
     if (!getToken()) { window.location.href = '/'; return; }
 
     const user = initUserUI();
-    if (!user) return; // initUserUI sudah redirect ke '/' jika tidak login
+    if (!user) return;
+    // Kategori Alat hanya boleh diakses Admin
+    if (user.role !== 'admin') { window.location.href = '/dashboard'; return; }
 
     let categories = [];
 

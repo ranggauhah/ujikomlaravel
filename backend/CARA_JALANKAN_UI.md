@@ -59,9 +59,9 @@ Anda akan melihat halaman **Login** yang modern! 🎉
 
 Klik salah satu tombol demo account:
 
-- **Admin**: admin@example.com / password
-- **Petugas**: petugas@example.com / password  
-- **Peminjam**: peminjam@example.com / password
+- **Admin**: admin@gmail.com / password
+- **Petugas**: petugas@gmail.com / password  
+- **Peminjam**: peminjam@gmail.com / password
 
 Atau ketik manual, lalu klik **Login**.
 
@@ -225,4 +225,4 @@ php artisan view:cache
 
 **Happy Coding! 🎉**
 
-Kalau ada yang error atau bingung, tinggal tanya!
+Kalau ada yang error atau bingung, tinggal benerin
