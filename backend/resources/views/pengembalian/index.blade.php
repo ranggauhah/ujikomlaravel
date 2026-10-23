@@ -384,14 +384,13 @@
                 </td>
                 <td>
                     ${!sudahKembali && user.role === 'petugas'
-                        ? `<button class="btn btn-success btn-sm"
-                                   onclick="bukaModalKembalikan(${p.id})"
-                                   style="white-space:nowrap;padding:8px 14px;
-                                          background:var(--success);color:white;
-                                          border:none;border-radius:8px;cursor:pointer;
-                                          font-weight:600;font-size:13px;">
-                               <i class="fas fa-undo-alt"></i> Kembalikan
-                           </button>`
+                        ? `<span style="color:var(--warning);font-size:13px;">
+                               <i class="fas fa-hourglass-half"></i> Menunggu Peminjam
+                           </span>`
+                        : !sudahKembali && user.role !== 'petugas'
+                        ? `<span style="color:var(--gray-400);font-size:13px;">
+                               <i class="fas fa-eye"></i> Menunggu Petugas
+                           </span>`
                         : sudahKembali && p.pengembalian?.kondisi_alat === 'rusak'
                           && !(p.pengembalian?.denda > 0) && user.role === 'petugas'
                         ? `<button onclick="bukaModalDenda(${p.pengembalian.id}, ${p.id})"
@@ -405,9 +404,7 @@
                         ? `<span style="color:var(--gray-400);font-size:13px;">
                                <i class="fas fa-check"></i> Selesai
                            </span>`
-                        : `<span style="color:var(--gray-400);font-size:13px;">
-                               <i class="fas fa-eye"></i> Menunggu Petugas
-                           </span>`}
+                        : ''}
                 </td>
             </tr>`;
         }).join('');
