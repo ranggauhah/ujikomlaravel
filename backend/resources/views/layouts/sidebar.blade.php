@@ -39,10 +39,9 @@
             <i class="fas fa-history"></i>
             <span>Log Aktivitas</span>
         </a>
-        <a href="{{ route('notifikasi') }}" class="nav-item {{ request()->routeIs('notifikasi') ? 'active' : '' }}" id="menuNotifikasi">
-            <i class="fas fa-bell"></i>
-            <span>Notifikasi</span>
-            <span class="nav-badge" id="sidebarNotifBadge" style="display:none;">0</span>
+        <a href="{{ route('profil') }}" class="nav-item {{ request()->routeIs('profil') ? 'active' : '' }}">
+            <i class="fas fa-user-edit"></i>
+            <span>Edit Profil</span>
         </a>
     </nav>
 
@@ -65,17 +64,6 @@
 
 <script>
 (function () {
-    /*
-    | Aturan visibilitas menu per role:
-    |
-    | Admin   : Dashboard, Kategori Alat, Data Alat, Peminjaman,
-    |           Pengembalian (lihat saja), Manajemen User, Log Aktivitas, Notifikasi
-    |
-    | Petugas : Dashboard, Data Alat, Peminjaman,
-    |           Pengembalian (lihat + kembalikan), Laporan, Notifikasi
-    |
-    | Peminjam: Dashboard, Data Alat, Peminjaman, Notifikasi
-    */
     const stored = localStorage.getItem('user');
     if (!stored) return;
     try {
@@ -85,7 +73,7 @@
         const menuKat = document.getElementById('menuKategori');
         if (menuKat) menuKat.style.display = u.role === 'admin' ? '' : 'none';
 
-        // Pengembalian — admin & petugas (peminjam tidak bisa)
+        // Pengembalian — admin & petugas
         const menuPengembalian = document.getElementById('menuPengembalian');
         if (menuPengembalian) menuPengembalian.style.display =
             (u.role === 'admin' || u.role === 'petugas') ? '' : 'none';
@@ -103,23 +91,5 @@
         if (menuLog) menuLog.style.display = u.role === 'admin' ? '' : 'none';
 
     } catch (e) { /* silent */ }
-})();
-
-// Update badge notifikasi di sidebar setiap 30 detik
-(function updateSidebarBadge() {
-    function syncBadge() {
-        const count = window._notifUnreadCount || 0;
-        const el = document.getElementById('sidebarNotifBadge');
-        if (!el) return;
-        if (count > 0) {
-            el.textContent = count > 99 ? '99+' : count;
-            el.style.display = 'flex';
-        } else {
-            el.style.display = 'none';
-        }
-    }
-    // Sync tiap 2 detik (ikut polling topbar yg isi _notifUnreadCount)
-    setInterval(syncBadge, 2000);
-    syncBadge();
 })();
 </script>

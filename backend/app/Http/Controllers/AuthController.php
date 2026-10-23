@@ -84,4 +84,54 @@ class AuthController extends Controller
             'data' => new UserResource($request->user()),
         ]);
     }
+
+    /**
+     * Update profile (name & email)
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name'  => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil berhasil diperbarui',
+            'data'    => new UserResource($user->fresh()),
+        ]);
+    }
+
+    /**
+     * Change password
+     */
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'password_lama'         => 'required|string',
+            'password_baru'         => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->password_lama, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password lama tidak sesuai',
+            ], 422);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password_baru),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil diubah',
+        ]);
+    }
 }

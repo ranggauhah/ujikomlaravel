@@ -45,7 +45,7 @@ Route::middleware(['web'])->group(function () {
         return view('log-aktivitas.index');
     })->name('log-aktivitas');
 
-    Route::get('/notifikasi', function () {
-        return view('notifikasi.index');
-    })->name('notifikasi');
+    Route::get('/profil', function () {
+        return view('profil.index');
+    })->name('profil');
 });

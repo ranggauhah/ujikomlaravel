@@ -7,7 +7,6 @@ use App\Http\Resources\PeminjamanResource;
 use App\Models\Alat;
 use App\Models\DetailPinjam;
 use App\Models\Peminjaman;
-use App\Services\NotifikasiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -72,9 +71,6 @@ class PeminjamanController extends Controller
             DB::commit();
 
             $peminjaman->load(['user', 'detailPinjam.alat']);
-
-            // Kirim notifikasi pengajuan ke admin & petugas
-            (new NotifikasiService())->pengajuanBaru($peminjaman);
 
             return response()->json([
                 'success' => true,
@@ -158,9 +154,6 @@ class PeminjamanController extends Controller
 
             $peminjaman->load(['user', 'detailPinjam.alat']);
 
-            // Kirim notifikasi disetujui ke peminjam
-            (new NotifikasiService())->disetujui($peminjaman);
-
             return response()->json([
                 'success' => true,
                 'message' => 'Peminjaman berhasil disetujui',
@@ -204,9 +197,6 @@ class PeminjamanController extends Controller
             DB::commit();
 
             $peminjaman->load(['user', 'detailPinjam.alat']);
-
-            // Kirim notifikasi ditolak ke peminjam
-            (new NotifikasiService())->ditolak($peminjaman);
 
             return response()->json([
                 'success' => true,
