@@ -297,11 +297,35 @@
                     <label for="kembalikanKondisi">
                         <i class="fas fa-clipboard-check"></i> Kondisi Alat Saat Dikembalikan
                     </label>
-                    <select id="kembalikanKondisi" required>
+                    <select id="kembalikanKondisi" required onchange="toggleInfoDenda(this.value)">
                         <option value="">-- Pilih Kondisi --</option>
                         <option value="baik">Baik — alat dalam kondisi normal</option>
                         <option value="rusak">Rusak — alat mengalami kerusakan</option>
                     </select>
+                </div>
+
+                <!-- Info denda rusak (muncul otomatis jika pilih Rusak) -->
+                <div id="infoDendaRusak" style="display:none;
+                     padding:14px 16px; background:#fee2e2; border:1px solid #fca5a5;
+                     border-radius:10px; margin-bottom:16px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <i class="fas fa-exclamation-triangle" style="color:#dc2626;font-size:16px;"></i>
+                        <strong style="color:#991b1b;font-size:14px;">Perhatian: Alat Rusak</strong>
+                    </div>
+                    <p style="font-size:13px;color:#7f1d1d;margin-bottom:8px;">
+                        Alat yang dikembalikan dalam kondisi rusak akan dikenakan denda.
+                        Nominal denda akan ditentukan oleh petugas setelah verifikasi kondisi alat.
+                    </p>
+                    <div style="background:#fff5f5;border-radius:8px;padding:10px 12px;">
+                        <div style="font-size:12px;color:#9ca3af;margin-bottom:4px;">Estimasi denda kerusakan:</div>
+                        <div style="font-size:15px;font-weight:700;color:#dc2626;">
+                            <i class="fas fa-coins"></i> Ditentukan petugas setelah verifikasi
+                        </div>
+                    </div>
+                    <p style="font-size:12px;color:#b91c1c;margin-top:8px;">
+                        <i class="fas fa-info-circle"></i>
+                        Pastikan mengisi keterangan kerusakan di bawah agar petugas dapat menilai dengan tepat.
+                    </p>
                 </div>
 
                 <!-- Keterangan -->
@@ -1036,12 +1060,25 @@
         }
     }
 
+    /* ─── Toggle info denda rusak ───────────────────────────────────────── */
+    window.toggleInfoDenda = function(kondisi) {
+        const infoEl = document.getElementById('infoDendaRusak');
+        if (!infoEl) return;
+        infoEl.style.display = kondisi === 'rusak' ? 'block' : 'none';
+    };
+
     /* ─── Peminjam: ajukan pengembalian ────────────────────────────────── */
     function showModalKembalikan(id) {
         const p = allPeminjaman.find(x => x.id === id);
         if (!p) return;
 
         document.getElementById('kembalikanPeminjamanId').value = id;
+
+        // Reset form
+        document.getElementById('kembalikanKondisi').value = '';
+        document.getElementById('kembalikanKeterangan').value = '';
+        const infoEl = document.getElementById('infoDendaRusak');
+        if (infoEl) infoEl.style.display = 'none';
 
         // Isi ringkasan
         const rows = (p.detail_pinjam || []).map(d => `
