@@ -67,7 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('pengembalian', [PengembalianController::class, 'store']);
     });
 
-    Route::middleware('role:petugas')->group(function () {
+    Route::middleware('role:petugas,admin')->group(function () {
         Route::put('pengembalian/{pengembalian}',    [PengembalianController::class, 'update']);
         Route::delete('pengembalian/{pengembalian}', [PengembalianController::class, 'destroy']);
     });

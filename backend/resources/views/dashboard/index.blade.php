@@ -122,21 +122,7 @@
                 </div>
             </div>
 
-            <!-- Kartu notifikasi belum dibaca (ditampilkan untuk semua role) -->
-            <div class="stat-card" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;cursor:pointer;"
-                 onclick="window.location.href='/notifikasi'">
-                <div class="stat-icon" style="background:rgba(255,255,255,0.2);">
-                    <i class="fas fa-bell"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value" id="notifUnreadDash">0</div>
-                    <div class="stat-label">Notifikasi Belum Dibaca</div>
-                    <div class="stat-trend">
-                        <i class="fas fa-arrow-right"></i>
-                        <span>Lihat semua →</span>
-                    </div>
-                </div>
-            </div>
+
         </div>
 
         <!-- Recent Activities -->
@@ -187,10 +173,10 @@
     /*
     | Dashboard per role:
     | Admin   : Total Alat, Total Peminjaman, Sedang Dipinjam, Total User,
-    |           Menunggu Persetujuan, Terlambat, Notifikasi
-    | Petugas : Total Alat, Total Peminjaman, Sedang Dipinjam, Menunggu, Terlambat, Notifikasi
+    |           Menunggu Persetujuan, Terlambat
+    | Petugas : Total Alat, Total Peminjaman, Sedang Dipinjam, Menunggu, Terlambat
     |           (tidak tampil Total User karena petugas tidak kelola user)
-    | Peminjam: Peminjaman Saya, Sedang Dipinjam Saya, Notifikasi
+    | Peminjam: Peminjaman Saya, Sedang Dipinjam Saya
     */
 
     // Sembunyikan kartu Total User untuk non-admin
@@ -242,21 +228,6 @@
                 peminjamanData.data?.filter(p => p.status === 'menunggu').length || 0;
             document.getElementById('totalTerlambat').textContent =
                 peminjamanData.data?.filter(p => p.status === 'terlambat').length || 0;
-
-            // Notifikasi belum dibaca
-            try {
-                const notifRes  = await fetch(`${API_URL}/notifikasi/unread`, {
-                    headers: { 'Authorization': `Bearer ${getToken()}` }
-                });
-                const notifData = await notifRes.json();
-                if (notifData.success) {
-                    document.getElementById('notifUnreadDash').textContent =
-                        notifData.total_unread || 0;
-                    // Sinkron ke cache topbar agar badge lonceng juga langsung terupdate
-                    window._notifUnreadCount = notifData.total_unread || 0;
-                    window._notifCache       = notifData.data || [];
-                }
-            } catch (_) { /* silent */ }
 
             // Load recent peminjaman
             const tbody = document.getElementById('recentPeminjaman');
