@@ -507,27 +507,34 @@
         if (!tanggalKembali) { alert('Tanggal kembali wajib diisi'); return; }
         if (!kondisiAlat)    { alert('Kondisi alat wajib dipilih');   return; }
 
-        // Payload sesuai StorePengembalianRequest:
-        // peminjaman_id (required|exists:peminjaman)
-        // tanggal_kembali (required|date)
-        // kondisi_alat (required|in:baik,rusak)
-        // keterangan (nullable|string)
-        // denda (nullable|numeric|min:0)
-        const payload = {
-            peminjaman_id:  parseInt(peminjamanId),
-            tanggal_kembali: tanggalKembali,
-            kondisi_alat:   kondisiAlat,
-            keterangan:     keterangan,
-            denda:          kondisiAlat === 'rusak' ? denda : 0,
-        };
+        // Petugas pakai PUT (update pengembalian yang sudah ada)
+        // Cari pengembalian id dari data
+        const p = allPeminjaman.find(x => x.id === parseInt(peminjamanId));
+        const pengembalianId = p?.pengembalian?.id;
+
+        const isUpdate = !!pengembalianId;
+        const url    = isUpdate
+            ? `${API_URL}/pengembalian/${pengembalianId}`
+            : `${API_URL}/pengembalian`;
+        const method = isUpdate ? 'PUT' : 'POST';
+
+        const payload = isUpdate
+            ? { kondisi_alat: kondisiAlat, keterangan, denda: kondisiAlat === 'rusak' ? denda : 0 }
+            : {
+                peminjaman_id:   parseInt(peminjamanId),
+                tanggal_kembali: tanggalKembali,
+                kondisi_alat:    kondisiAlat,
+                keterangan,
+                denda:           kondisiAlat === 'rusak' ? denda : 0,
+              };
 
         const btn = document.getElementById('submitKembalikanBtn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
 
         try {
-            const res  = await fetch(`${API_URL}/pengembalian`, {
-                method: 'POST',
+            const res  = await fetch(url, {
+                method,
                 headers: {
                     Authorization: `Bearer ${getToken()}`,
                     'Content-Type': 'application/json'
