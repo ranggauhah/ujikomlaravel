@@ -39,10 +39,7 @@
             <i class="fas fa-history"></i>
             <span>Log Aktivitas</span>
         </a>
-        <a href="{{ route('profil') }}" class="nav-item {{ request()->routeIs('profil') ? 'active' : '' }}">
-            <i class="fas fa-user-edit"></i>
-            <span>Edit Profil</span>
-        </a>
+
     </nav>
 
     <div class="sidebar-footer">
