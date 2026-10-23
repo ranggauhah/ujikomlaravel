@@ -169,35 +169,33 @@
 </div>
 
 {{-- ── Modal Input Denda ── --}}
-<div class="modal-overlay" id="modalDenda">
-    <div class="modal" style="max-width:420px;">
-        <div class="modal-header" style="background:linear-gradient(135deg,var(--danger),#dc2626);">
-            <h3 style="color:white;"><i class="fas fa-coins"></i> Input Denda Kerusakan</h3>
-            <button class="modal-close" onclick="tutupModalDenda()" style="color:white;">
+<div class="modal" id="modalDenda">
+    <div class="modal-content" style="max-width:420px;width:100%;padding:0;border-radius:20px;overflow:hidden;">
+        <div class="modal-header" style="background:linear-gradient(135deg,var(--danger),#dc2626);padding:20px 24px;">
+            <h3 style="color:white;font-size:18px;"><i class="fas fa-coins"></i> Input Denda Kerusakan</h3>
+            <button class="modal-close" onclick="tutupModalDenda()" style="color:white;background:rgba(255,255,255,0.2);">
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <form id="formInputDenda">
+        <form id="formInputDenda" style="padding:24px;">
             <input type="hidden" id="dendaInputId">
-            <div class="modal-body">
-                <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;
-                             padding:12px 14px;margin-bottom:20px;font-size:13px;color:#991b1b;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Alat dikembalikan dalam kondisi <strong>rusak</strong>.
-                    Masukkan nominal denda yang harus dibayar peminjam.
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-money-bill-wave"></i> Nominal Denda (Rp)</label>
-                    <input type="number" id="inputDendaNominal"
-                           min="1000" step="1000"
-                           placeholder="Contoh: 50000"
-                           required>
-                    <div style="font-size:12px;color:var(--gray-500);margin-top:4px;">
-                        Masukkan nominal dalam Rupiah
-                    </div>
+            <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;
+                         padding:12px 14px;margin-bottom:20px;font-size:13px;color:#991b1b;">
+                <i class="fas fa-exclamation-triangle"></i>
+                Alat dikembalikan dalam kondisi <strong>rusak</strong>.
+                Masukkan nominal denda yang harus dibayar peminjam.
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-money-bill-wave"></i> Nominal Denda (Rp)</label>
+                <input type="number" id="inputDendaNominal"
+                       min="1000" step="1000"
+                       placeholder="Contoh: 50000"
+                       required>
+                <div style="font-size:12px;color:var(--gray-500);margin-top:4px;">
+                    Masukkan nominal dalam Rupiah
                 </div>
             </div>
-            <div class="modal-footer">
+            <div style="display:flex;gap:12px;justify-content:flex-end;">
                 <button type="button" class="btn btn-secondary"
                         onclick="tutupModalDenda()"
                         style="width:auto;padding:12px 24px;">
