@@ -46,7 +46,9 @@
     </nav>
 
     <div class="sidebar-footer">
-        <div class="user-profile">
+        <a href="/profil" class="user-profile" style="text-decoration:none; cursor:pointer; transition: background 0.2s;"
+           onmouseover="this.style.background='rgba(99,102,241,0.08)'"
+           onmouseout="this.style.background=''">
             <div class="user-profile-avatar" id="sidebarAvatar">
                 <i class="fas fa-user"></i>
             </div>
@@ -54,7 +56,8 @@
                 <div class="user-profile-name" id="sidebarUserName">Loading...</div>
                 <div class="user-profile-role" id="sidebarUserRole">-</div>
             </div>
-        </div>
+            <i class="fas fa-pen" style="font-size:12px; color:var(--gray-400); margin-left:auto;"></i>
+        </a>
         <button class="btn-logout" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i>
             <span>Logout</span>
