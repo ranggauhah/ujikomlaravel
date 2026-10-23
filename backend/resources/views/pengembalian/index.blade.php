@@ -70,11 +70,12 @@
                                 <th>Tgl Pinjam</th>
                                 <th>Deadline</th>
                                 <th>Status</th>
+                                <th>Kondisi & Denda</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="pengembalianTable">
-                            <tr><td colspan="7" style="text-align:center;padding:40px;
+                            <tr><td colspan="8" style="text-align:center;padding:40px;
                                                         color:var(--gray-500);">
                                 <i class="fas fa-spinner fa-spin" style="font-size:22px;"></i>
                                 <div style="margin-top:8px;">Memuat data...</div>
@@ -161,6 +162,51 @@
                         style="width:auto;padding:12px 24px;
                                background:var(--success);color:white;">
                     <i class="fas fa-check"></i> Konfirmasi Pengembalian
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ── Modal Input Denda ── --}}
+<div class="modal-overlay" id="modalDenda">
+    <div class="modal" style="max-width:420px;">
+        <div class="modal-header" style="background:linear-gradient(135deg,var(--danger),#dc2626);">
+            <h3 style="color:white;"><i class="fas fa-coins"></i> Input Denda Kerusakan</h3>
+            <button class="modal-close" onclick="tutupModalDenda()" style="color:white;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="formInputDenda">
+            <input type="hidden" id="dendaInputId">
+            <div class="modal-body">
+                <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;
+                             padding:12px 14px;margin-bottom:20px;font-size:13px;color:#991b1b;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Alat dikembalikan dalam kondisi <strong>rusak</strong>.
+                    Masukkan nominal denda yang harus dibayar peminjam.
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-money-bill-wave"></i> Nominal Denda (Rp)</label>
+                    <input type="number" id="inputDendaNominal"
+                           min="1000" step="1000"
+                           placeholder="Contoh: 50000"
+                           required>
+                    <div style="font-size:12px;color:var(--gray-500);margin-top:4px;">
+                        Masukkan nominal dalam Rupiah
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        onclick="tutupModalDenda()"
+                        style="width:auto;padding:12px 24px;">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+                <button type="submit" class="btn btn-danger"
+                        id="btnSimpanDenda"
+                        style="width:auto;padding:12px 24px;">
+                    <i class="fas fa-save"></i> Simpan Denda
                 </button>
             </div>
         </form>
@@ -311,6 +357,32 @@
                 </td>
                 <td>${statusBadge(p)}</td>
                 <td>
+                    ${p.pengembalian
+                        ? `<div>
+                            ${p.pengembalian.kondisi_alat === 'rusak'
+                                ? `<span class="badge badge-danger" style="margin-bottom:4px;">
+                                       <i class="fas fa-times-circle"></i> Rusak
+                                   </span>`
+                                : `<span class="badge badge-success">
+                                       <i class="fas fa-check-circle"></i> Baik
+                                   </span>`
+                            }
+                            ${p.pengembalian.denda > 0
+                                ? `<div style="font-size:13px;font-weight:700;color:var(--danger);margin-top:4px;">
+                                       <i class="fas fa-coins"></i>
+                                       Rp ${Number(p.pengembalian.denda).toLocaleString('id-ID')}
+                                   </div>`
+                                : p.pengembalian.kondisi_alat === 'rusak'
+                                ? `<div style="font-size:12px;color:var(--warning);margin-top:4px;">
+                                       <i class="fas fa-clock"></i> Belum ada denda
+                                   </div>`
+                                : ''
+                            }
+                           </div>`
+                        : `<span style="color:var(--gray-400);font-size:13px;">-</span>`
+                    }
+                </td>
+                <td>
                     ${!sudahKembali && user.role === 'petugas'
                         ? `<button class="btn btn-success btn-sm"
                                    onclick="bukaModalKembalikan(${p.id})"
@@ -319,6 +391,15 @@
                                           border:none;border-radius:8px;cursor:pointer;
                                           font-weight:600;font-size:13px;">
                                <i class="fas fa-undo-alt"></i> Kembalikan
+                           </button>`
+                        : sudahKembali && p.pengembalian?.kondisi_alat === 'rusak'
+                          && !(p.pengembalian?.denda > 0) && user.role === 'petugas'
+                        ? `<button onclick="bukaModalDenda(${p.pengembalian.id}, ${p.id})"
+                                   style="white-space:nowrap;padding:8px 14px;
+                                          background:var(--danger);color:white;
+                                          border:none;border-radius:8px;cursor:pointer;
+                                          font-weight:600;font-size:13px;">
+                               <i class="fas fa-coins"></i> Input Denda
                            </button>`
                         : sudahKembali
                         ? `<span style="color:var(--gray-400);font-size:13px;">
@@ -334,7 +415,7 @@
 
     function showError(msg) {
         document.getElementById('pengembalianTable').innerHTML =
-            `<tr><td colspan="7" class="empty-state">
+            `<tr><td colspan="8" class="empty-state">
                 <i class="fas fa-exclamation-circle"></i><h3>${msg}</h3>
             </td></tr>`;
     }
@@ -477,6 +558,54 @@
     /* ─── Expose ke window (untuk onclick inline di template string JS) ─── */
     window.bukaModalKembalikan = bukaModalKembalikan;
     window.closeKembalikanModal = closeKembalikanModal;
+
+    /* ─── Modal Input Denda ─────────────────────────────────────────────── */
+    window.bukaModalDenda = function(pengembalianId, peminjamanId) {
+        document.getElementById('dendaInputId').value = pengembalianId;
+        document.getElementById('inputDendaNominal').value = '';
+        document.getElementById('modalDenda').classList.add('active');
+    };
+
+    window.tutupModalDenda = function() {
+        document.getElementById('modalDenda').classList.remove('active');
+    };
+
+    document.getElementById('formInputDenda').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id    = document.getElementById('dendaInputId').value;
+        const denda = parseFloat(document.getElementById('inputDendaNominal').value) || 0;
+
+        if (denda <= 0) { alert('Nominal denda harus lebih dari 0'); return; }
+
+        const btn = document.getElementById('btnSimpanDenda');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+        try {
+            const res  = await fetch(`${API_URL}/pengembalian/${id}`, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `Bearer ${getToken()}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ denda })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                tutupModalDenda();
+                await loadData();
+                alert(`Denda Rp ${denda.toLocaleString('id-ID')} berhasil disimpan!`);
+            } else {
+                alert(data.message || 'Gagal menyimpan denda');
+            }
+        } catch (e) {
+            alert('Terjadi kesalahan koneksi');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Simpan Denda';
+        }
+    });
 
     /* ─── Init ──────────────────────────────────────────────────────────── */
     loadData();
