@@ -309,7 +309,7 @@
 
         tbody.innerHTML = data.map(p => {
             // Cek keterlambatan: deadline ada dan sudah lewat, belum dikembalikan
-            const deadline    = p.tanggal_kembali;   // deadline, bukan tgl aktual kembali
+            const deadline    = p.tanggal_harus_kembali;   // deadline yang diisi saat peminjaman dibuat
             const isLate      = deadline
                 && new Date(deadline) < new Date()
                 && p.status !== 'dikembalikan';
@@ -347,7 +347,7 @@
                 <td>
                     <div style="font-weight:600;
                                 color:${isLate ? 'var(--danger)' : 'var(--gray-900)'};">
-                        ${deadline || '-'}
+                        ${p.tanggal_harus_kembali || '-'}
                     </div>
                     ${isLate ? `<div style="font-size:11px;color:var(--danger);">
                                     <i class="fas fa-exclamation-triangle"></i> Terlambat

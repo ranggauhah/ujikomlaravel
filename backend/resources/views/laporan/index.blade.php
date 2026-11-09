@@ -340,9 +340,11 @@
         }
 
         tbody.innerHTML = data.map(p => {
-            const tglPinjam = new Date(p.tanggal_pinjam);
-            const tglKembali = new Date(p.tanggal_kembali);
-            const durasi = Math.ceil((tglKembali - tglPinjam) / (1000 * 60 * 60 * 24));
+            const tglPinjam  = new Date(p.tanggal_pinjam);
+            const tglDeadline = p.tanggal_harus_kembali ? new Date(p.tanggal_harus_kembali) : null;
+            const durasi = tglDeadline
+                ? Math.ceil((tglDeadline - tglPinjam) / (1000 * 60 * 60 * 24)) + ' hari'
+                : '-';
 
             return `
                 <tr>
@@ -358,7 +360,7 @@
                             ${(p.detail_pinjam || []).map(d => d.alat?.kategori?.nama_kategori).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(', ')}
                         </div>
                     </td>
-                    <td>${durasi} hari</td>
+                    <td>${durasi}</td>
                     <td>
                         <span class="badge badge-${
                             p.status === 'dikembalikan' ? 'success' : 
@@ -457,15 +459,15 @@
 
         const rows = filtered.map((p, i) => {
             let durasi = '-';
-            if (p.tanggal_pinjam && p.tanggal_kembali) {
-                durasi = Math.ceil((new Date(p.tanggal_kembali) - new Date(p.tanggal_pinjam)) / (1000 * 60 * 60 * 24)) + ' hari';
+            if (p.tanggal_pinjam && p.tanggal_harus_kembali) {
+                durasi = Math.ceil((new Date(p.tanggal_harus_kembali) - new Date(p.tanggal_pinjam)) / (1000 * 60 * 60 * 24)) + ' hari';
             }
             const statusColor = p.status === 'dikembalikan' ? '#10b981' : p.status === 'terlambat' ? '#ef4444' : '#f59e0b';
             return `
                 <tr style="border-bottom: 1px solid #e5e7eb;">
                     <td style="padding: 10px 12px;">${i + 1}</td>
                     <td style="padding: 10px 12px;">${p.tanggal_pinjam || '-'}</td>
-                    <td style="padding: 10px 12px;">${p.tanggal_kembali || '-'}</td>
+                    <td style="padding: 10px 12px;">${p.tanggal_harus_kembali || '-'}</td>
                     <td style="padding: 10px 12px; font-weight: 600;">${p.user?.name || '-'}</td>
                     <td style="padding: 10px 12px;">${p.keperluan || '-'}</td>
                     <td style="padding: 10px 12px;">${durasi}</td>
@@ -517,7 +519,7 @@
             <tr>
                 <th>No</th>
                 <th>Tgl Pinjam</th>
-                <th>Tgl Kembali</th>
+                <th>Deadline</th>
                 <th>Peminjam</th>
                 <th>Keperluan</th>
                 <th>Durasi</th>

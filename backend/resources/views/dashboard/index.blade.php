@@ -142,7 +142,7 @@
                                 <th>ID</th>
                                 <th>Peminjam</th>
                                 <th>Tanggal Pinjam</th>
-                                <th>Tanggal Kembali</th>
+                                <th>Deadline</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -247,7 +247,27 @@
                             </div>
                         </td>
                         <td>${p.tanggal_pinjam || '-'}</td>
-                        <td>${p.tanggal_kembali || '-'}</td>
+                        <td>${(() => {
+                            const today = new Date(); today.setHours(0,0,0,0);
+                            const dl = p.tanggal_harus_kembali ? new Date(p.tanggal_harus_kembali) : null;
+                            const sudah = !!p.pengembalian || p.status === 'dikembalikan';
+                            if (!dl) return '<span style="color:var(--gray-400)">-</span>';
+                            if (sudah) return `<span>${p.tanggal_harus_kembali}</span>`;
+                            if (dl < today) {
+                                const hari = Math.ceil((today - dl) / (1000*60*60*24));
+                                return `<span style="color:#dc2626;font-weight:700;">
+                                    <i class="fas fa-exclamation-circle"></i> ${p.tanggal_harus_kembali}
+                                    <div style="font-size:11px;">Terlambat ${hari} hari</div>
+                                </span>`;
+                            }
+                            if (dl.toDateString() === today.toDateString()) {
+                                return `<span style="color:#d97706;font-weight:700;">
+                                    <i class="fas fa-clock"></i> ${p.tanggal_harus_kembali}
+                                    <div style="font-size:11px;">Hari ini!</div>
+                                </span>`;
+                            }
+                            return `<span>${p.tanggal_harus_kembali}</span>`;
+                        })()}</td>
                         <td>
                             <span class="badge badge-${
                                 p.status === 'dikembalikan' ? 'success' : 
