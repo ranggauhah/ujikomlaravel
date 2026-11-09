@@ -14,14 +14,16 @@ class Peminjaman extends Model
     protected $fillable = [
         'user_id',
         'tanggal_pinjam',
+        'tanggal_harus_kembali',
         'tanggal_kembali',
         'status',
         'keperluan',
     ];
 
     protected $casts = [
-        'tanggal_pinjam' => 'date',
-        'tanggal_kembali' => 'date',
+        'tanggal_pinjam'        => 'date',
+        'tanggal_harus_kembali' => 'date',
+        'tanggal_kembali'       => 'date',
     ];
 
     /**

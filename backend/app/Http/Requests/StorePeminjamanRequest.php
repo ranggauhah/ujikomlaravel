@@ -24,11 +24,12 @@ class StorePeminjamanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tanggal_pinjam' => 'required|date',
-            'keperluan' => 'nullable|string',
-            'detail' => 'required|array|min:1',
-            'detail.*.alat_id' => 'required|exists:alat,id',
-            'detail.*.jumlah_pinjam' => 'required|integer|min:1',
+            'tanggal_pinjam'        => 'required|date',
+            'tanggal_harus_kembali' => 'required|date|after:tanggal_pinjam',
+            'keperluan'             => 'nullable|string',
+            'detail'                => 'required|array|min:1',
+            'detail.*.alat_id'      => 'required|exists:alat,id',
+            'detail.*.jumlah_pinjam'=> 'required|integer|min:1',
         ];
     }
 
@@ -40,15 +41,18 @@ class StorePeminjamanRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'tanggal_pinjam.required' => 'Tanggal pinjam wajib diisi',
-            'tanggal_pinjam.date' => 'Format tanggal tidak valid',
-            'detail.required' => 'Detail peminjaman wajib diisi',
-            'detail.min' => 'Minimal 1 alat harus dipinjam',
-            'detail.*.alat_id.required' => 'Alat wajib dipilih',
-            'detail.*.alat_id.exists' => 'Alat tidak ditemukan',
-            'detail.*.jumlah_pinjam.required' => 'Jumlah pinjam wajib diisi',
-            'detail.*.jumlah_pinjam.integer' => 'Jumlah harus berupa angka',
-            'detail.*.jumlah_pinjam.min' => 'Jumlah minimal 1',
+            'tanggal_pinjam.required'          => 'Tanggal pinjam wajib diisi',
+            'tanggal_pinjam.date'              => 'Format tanggal tidak valid',
+            'tanggal_harus_kembali.required'   => 'Deadline pengembalian wajib diisi',
+            'tanggal_harus_kembali.date'       => 'Format tanggal deadline tidak valid',
+            'tanggal_harus_kembali.after'      => 'Deadline harus setelah tanggal pinjam',
+            'detail.required'                  => 'Detail peminjaman wajib diisi',
+            'detail.min'                       => 'Minimal 1 alat harus dipinjam',
+            'detail.*.alat_id.required'        => 'Alat wajib dipilih',
+            'detail.*.alat_id.exists'          => 'Alat tidak ditemukan',
+            'detail.*.jumlah_pinjam.required'  => 'Jumlah pinjam wajib diisi',
+            'detail.*.jumlah_pinjam.integer'   => 'Jumlah harus berupa angka',
+            'detail.*.jumlah_pinjam.min'       => 'Jumlah minimal 1',
         ];
     }
 

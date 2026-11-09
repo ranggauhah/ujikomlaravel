@@ -15,17 +15,18 @@ class PeminjamanResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'user_id' => $this->user_id,
-            'user' => new UserResource($this->whenLoaded('user')),
-            'tanggal_pinjam' => $this->tanggal_pinjam?->format('Y-m-d'),
-            'tanggal_kembali' => $this->tanggal_kembali?->format('Y-m-d'),
-            'status' => $this->status,
-            'keperluan' => $this->keperluan,
-            'detail_pinjam' => DetailPinjamResource::collection($this->whenLoaded('detailPinjam')),
-            'pengembalian' => new PengembalianResource($this->whenLoaded('pengembalian')),
-            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
-            'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
+            'id'                    => $this->id,
+            'user_id'               => $this->user_id,
+            'user'                  => new UserResource($this->whenLoaded('user')),
+            'tanggal_pinjam'        => $this->tanggal_pinjam?->format('Y-m-d'),
+            'tanggal_harus_kembali' => $this->tanggal_harus_kembali?->format('Y-m-d'),
+            'tanggal_kembali'       => $this->tanggal_kembali?->format('Y-m-d'),
+            'status'                => $this->status,
+            'keperluan'             => $this->keperluan,
+            'detail_pinjam'         => DetailPinjamResource::collection($this->whenLoaded('detailPinjam')),
+            'pengembalian'          => new PengembalianResource($this->whenLoaded('pengembalian')),
+            'created_at'            => $this->created_at?->format('Y-m-d H:i:s'),
+            'updated_at'            => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 }

@@ -53,10 +53,11 @@ class PeminjamanController extends Controller
 
             // Buat peminjaman — status 'menunggu' menunggu persetujuan petugas/admin
             $peminjaman = Peminjaman::create([
-                'user_id'        => $request->user()->id,
-                'tanggal_pinjam' => $request->tanggal_pinjam,
-                'keperluan'      => $request->keperluan,
-                'status'         => 'menunggu',
+                'user_id'               => $request->user()->id,
+                'tanggal_pinjam'        => $request->tanggal_pinjam,
+                'tanggal_harus_kembali' => $request->tanggal_harus_kembali,
+                'keperluan'             => $request->keperluan,
+                'status'                => 'menunggu',
             ]);
 
             // Buat detail peminjaman — stok BELUM dikurangi, baru dikurangi saat approve

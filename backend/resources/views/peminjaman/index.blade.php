@@ -83,7 +83,7 @@
                                 <th>Peminjam</th>
                                 <th>Alat Dipinjam</th>
                                 <th>Tgl Pinjam</th>
-                                <th>Keperluan</th>
+                                <th>Deadline</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
@@ -217,6 +217,18 @@
                         <i class="fas fa-calendar-alt"></i> Tanggal Pinjam
                     </label>
                     <input type="date" id="tanggal_pinjam" required>
+                </div>
+
+                <!-- Deadline Pengembalian -->
+                <div class="form-group">
+                    <label for="tanggal_harus_kembali">
+                        <i class="fas fa-calendar-times"></i> Deadline Pengembalian
+                    </label>
+                    <input type="date" id="tanggal_harus_kembali" required>
+                    <small style="color:var(--gray-500);font-size:12px;">
+                        <i class="fas fa-info-circle"></i>
+                        Batas waktu alat harus dikembalikan
+                    </small>
                 </div>
 
                 <!-- Keperluan -->
@@ -769,6 +781,39 @@
                 && p.status === 'dipinjam'
                 && user.role === 'peminjam';
 
+            // Hitung status deadline
+            const today = new Date(); today.setHours(0,0,0,0);
+            const deadlineDate = p.tanggal_harus_kembali ? new Date(p.tanggal_harus_kembali) : null;
+            const isTerlambat  = deadlineDate && !sudahKembali && deadlineDate < today;
+            const isHariIni    = deadlineDate && !sudahKembali
+                                 && deadlineDate.toDateString() === today.toDateString();
+
+            let deadlineHtml;
+            if (!deadlineDate) {
+                deadlineHtml = '<span style="color:var(--gray-400);">-</span>';
+            } else if (sudahKembali) {
+                deadlineHtml = `<span style="color:var(--gray-500);white-space:nowrap;">${p.tanggal_harus_kembali}</span>`;
+            } else if (isTerlambat) {
+                const selisihHari = Math.ceil((today - deadlineDate) / (1000*60*60*24));
+                deadlineHtml = `
+                    <div style="white-space:nowrap;">
+                        <span style="color:#dc2626;font-weight:700;">
+                            <i class="fas fa-exclamation-circle"></i> ${p.tanggal_harus_kembali}
+                        </span>
+                        <div style="font-size:11px;color:#dc2626;margin-top:2px;">
+                            Terlambat ${selisihHari} hari
+                        </div>
+                    </div>`;
+            } else if (isHariIni) {
+                deadlineHtml = `
+                    <span style="color:#d97706;font-weight:700;white-space:nowrap;">
+                        <i class="fas fa-clock"></i> ${p.tanggal_harus_kembali}
+                        <div style="font-size:11px;margin-top:2px;">Hari ini!</div>
+                    </span>`;
+            } else {
+                deadlineHtml = `<span style="color:var(--gray-700);white-space:nowrap;">${p.tanggal_harus_kembali}</span>`;
+            }
+
             return `<tr>
                 <td><strong>#${p.id}</strong></td>
                 <td>
@@ -793,9 +838,7 @@
                            </div>` : ''}
                 </td>
                 <td style="white-space:nowrap;">${p.tanggal_pinjam || '-'}</td>
-                <td style="max-width:160px;font-size:13px;color:var(--gray-600);white-space:normal;">
-                    ${p.keperluan || '-'}
-                </td>
+                <td>${deadlineHtml}</td>
                 <td>${statusBadge(p.status)}</td>
                 <td>
                     <div class="action-buttons">
@@ -871,8 +914,27 @@
         }
         cart = [];
         document.getElementById('peminjamanForm').reset();
-        document.getElementById('tanggal_pinjam').value =
-            new Date().toISOString().split('T')[0];
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('tanggal_pinjam').value = today;
+        document.getElementById('tanggal_pinjam').max   = '';
+
+        // Set min deadline = besok
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        document.getElementById('tanggal_harus_kembali').value = tomorrowStr;
+        document.getElementById('tanggal_harus_kembali').min   = tomorrowStr;
+
+        // Update min deadline setiap kali tanggal pinjam berubah
+        document.getElementById('tanggal_pinjam').onchange = function() {
+            const tgl = new Date(this.value);
+            tgl.setDate(tgl.getDate() + 1);
+            const minDl = tgl.toISOString().split('T')[0];
+            const dlInput = document.getElementById('tanggal_harus_kembali');
+            dlInput.min = minDl;
+            if (dlInput.value && dlInput.value <= this.value) dlInput.value = minDl;
+        };
+
         renderCart();
         rebuildAlatSelect();
         resetAlatSearch();
@@ -915,9 +977,36 @@
                         <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px;">Tanggal Pinjam</div>
                         <div style="font-weight:600;">${p.tanggal_pinjam || '-'}</div>
                     </div>
-                    <div style="padding:14px;background:var(--gray-50);border-radius:10px;">
-                        <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px;">Deadline Kembali</div>
-                        <div style="font-weight:600;">${p.tanggal_kembali || '-'}</div>
+                    <div style="padding:14px;background:${(() => {
+                        const today = new Date(); today.setHours(0,0,0,0);
+                        const dl = p.tanggal_harus_kembali ? new Date(p.tanggal_harus_kembali) : null;
+                        const sudah = !!p.pengembalian || p.status === 'dikembalikan';
+                        return dl && !sudah && dl < today ? '#fee2e2;border:1px solid #fca5a5' : 'var(--gray-50)';
+                    })()};border-radius:10px;">
+                        <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px;">
+                            <i class="fas fa-calendar-times"></i> Deadline Pengembalian
+                        </div>
+                        ${(() => {
+                            const today = new Date(); today.setHours(0,0,0,0);
+                            const dl = p.tanggal_harus_kembali ? new Date(p.tanggal_harus_kembali) : null;
+                            const sudah = !!p.pengembalian || p.status === 'dikembalikan';
+                            if (!dl) return '<div style="font-weight:600;color:var(--gray-400);">-</div>';
+                            if (sudah) return `<div style="font-weight:600;">${p.tanggal_harus_kembali}</div>`;
+                            if (dl < today) {
+                                const hari = Math.ceil((today - dl) / (1000*60*60*24));
+                                return `<div style="font-weight:700;color:#dc2626;">
+                                    <i class="fas fa-exclamation-circle"></i> ${p.tanggal_harus_kembali}
+                                    <div style="font-size:12px;margin-top:4px;">Terlambat ${hari} hari!</div>
+                                </div>`;
+                            }
+                            if (dl.toDateString() === today.toDateString()) {
+                                return `<div style="font-weight:700;color:#d97706;">
+                                    <i class="fas fa-clock"></i> ${p.tanggal_harus_kembali}
+                                    <div style="font-size:12px;margin-top:4px;">Harus kembali hari ini!</div>
+                                </div>`;
+                            }
+                            return `<div style="font-weight:600;">${p.tanggal_harus_kembali}</div>`;
+                        })()}
                     </div>
                 </div>
                 <div style="padding:14px;background:var(--gray-50);border-radius:10px;">
@@ -964,10 +1053,15 @@
         const tanggal = document.getElementById('tanggal_pinjam').value;
         if (!tanggal) { alert('Tanggal pinjam wajib diisi'); return; }
 
+        const deadline = document.getElementById('tanggal_harus_kembali').value;
+        if (!deadline) { alert('Deadline pengembalian wajib diisi'); return; }
+        if (deadline <= tanggal) { alert('Deadline harus setelah tanggal pinjam'); return; }
+
         // Payload sesuai StorePeminjamanRequest:
-        // tanggal_pinjam, keperluan (nullable), detail[]{alat_id, jumlah_pinjam}
+        // tanggal_pinjam, tanggal_harus_kembali, keperluan (nullable), detail[]{alat_id, jumlah_pinjam}
         const payload = {
-            tanggal_pinjam: tanggal,
+            tanggal_pinjam:        tanggal,
+            tanggal_harus_kembali: deadline,
             keperluan: document.getElementById('keperluan').value || null,
             detail: cart.map(i => ({
                 alat_id: i.alat_id,
@@ -1104,6 +1198,22 @@
                     <div style="font-size:11px;color:var(--gray-500);">Tanggal Pinjam</div>
                     <div style="font-weight:600;">${p.tanggal_pinjam || '-'}</div>
                 </div>
+                ${p.tanggal_harus_kembali ? (() => {
+                    const today = new Date(); today.setHours(0,0,0,0);
+                    const dl    = new Date(p.tanggal_harus_kembali);
+                    const late  = dl < today;
+                    const hari  = late ? Math.ceil((today - dl) / (1000*60*60*24)) : 0;
+                    return `<div style="padding:10px;border-radius:8px;
+                                        background:${late ? '#fee2e2' : '#f0fdf4'};
+                                        border:1px solid ${late ? '#fca5a5' : '#bbf7d0'};">
+                        <div style="font-size:11px;color:var(--gray-500);">Deadline Pengembalian</div>
+                        <div style="font-weight:700;color:${late ? '#dc2626' : '#065f46'};">
+                            ${late ? '<i class="fas fa-exclamation-circle"></i>' : '<i class="fas fa-calendar-check"></i>'}
+                            ${p.tanggal_harus_kembali}
+                            ${late ? `<span style="font-size:12px;display:block;margin-top:2px;">⚠ Terlambat ${hari} hari — mungkin dikenakan denda</span>` : ''}
+                        </div>
+                    </div>`;
+                })() : ''}
             </div>`;
 
         // Reset form
