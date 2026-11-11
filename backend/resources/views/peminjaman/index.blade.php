@@ -304,57 +304,24 @@
                     <input type="date" id="kembalikanTanggal" required>
                 </div>
 
-                <!-- Kondisi alat -->
-                <div class="form-group">
-                    <label for="kembalikanKondisi">
-                        <i class="fas fa-clipboard-check"></i> Kondisi Alat Saat Dikembalikan
-                    </label>
-                    <select id="kembalikanKondisi" required onchange="toggleInfoDenda(this.value)">
-                        <option value="">-- Pilih Kondisi --</option>
-                        <option value="baik">Baik — alat dalam kondisi normal</option>
-                        <option value="rusak">Rusak — alat mengalami kerusakan</option>
-                    </select>
-                </div>
-
-                <!-- Info denda rusak (muncul otomatis jika pilih Rusak) -->
-                <div id="infoDendaRusak" style="display:none;
-                     padding:14px 16px; background:#fee2e2; border:1px solid #fca5a5;
-                     border-radius:10px; margin-bottom:16px;">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                        <i class="fas fa-exclamation-triangle" style="color:#dc2626;font-size:16px;"></i>
-                        <strong style="color:#991b1b;font-size:14px;">Perhatian: Alat Rusak</strong>
-                    </div>
-                    <p style="font-size:13px;color:#7f1d1d;margin-bottom:8px;">
-                        Alat yang dikembalikan dalam kondisi rusak akan dikenakan denda.
-                        Nominal denda akan ditentukan oleh petugas setelah verifikasi kondisi alat.
-                    </p>
-                    <div style="background:#fff5f5;border-radius:8px;padding:10px 12px;">
-                        <div style="font-size:12px;color:#9ca3af;margin-bottom:4px;">Estimasi denda kerusakan:</div>
-                        <div style="font-size:15px;font-weight:700;color:#dc2626;">
-                            <i class="fas fa-coins"></i> Ditentukan petugas setelah verifikasi
-                        </div>
-                    </div>
-                    <p style="font-size:12px;color:#b91c1c;margin-top:8px;">
-                        <i class="fas fa-info-circle"></i>
-                        Pastikan mengisi keterangan kerusakan di bawah agar petugas dapat menilai dengan tepat.
-                    </p>
-                </div>
-
-                <!-- Keterangan -->
+                <!-- Keterangan opsional -->
                 <div class="form-group">
                     <label for="kembalikanKeterangan">
                         <i class="fas fa-sticky-note"></i> Keterangan
                         <span style="font-weight:400;color:var(--gray-500);"> (opsional)</span>
                     </label>
                     <textarea id="kembalikanKeterangan" rows="2"
-                              placeholder="Catatan kondisi alat jika ada..."
+                              placeholder="Catatan tambahan jika ada..."
                               style="resize:vertical;"></textarea>
                 </div>
 
-                <div style="padding:12px;background:#fef3c7;border:1px solid #fcd34d;
-                             border-radius:10px;font-size:13px;color:#92400e;">
-                    <i class="fas fa-info-circle"></i>
-                    Setelah mengajukan pengembalian, petugas akan memverifikasi kondisi alat.
+                <!-- Info: kondisi diperiksa petugas -->
+                <div style="padding:14px 16px;background:rgba(99,102,241,0.06);
+                             border:1px solid rgba(99,102,241,0.2);border-radius:10px;
+                             font-size:13px;color:var(--gray-700);">
+                    <i class="fas fa-info-circle" style="color:var(--primary);margin-right:6px;"></i>
+                    Setelah alat diserahkan, <strong>petugas akan memeriksa kondisi</strong>
+                    dan menentukan apakah ada denda kerusakan.
                 </div>
             </div>
             <div class="modal-footer">
@@ -798,9 +765,9 @@
             // Petugas & Admin bisa approve/tolak peminjaman yang masih menunggu
             const bolehApprove = p.status === 'menunggu'
                 && (user.role === 'admin' || user.role === 'petugas');
-            // Peminjam bisa ajukan pengembalian jika statusnya dipinjam
+            // Peminjam bisa ajukan pengembalian jika statusnya dipinjam ATAU terlambat
             const bolehKembalikan = !sudahKembali
-                && p.status === 'dipinjam'
+                && (p.status === 'dipinjam' || p.status === 'terlambat')
                 && user.role === 'peminjam';
 
             // Hitung status deadline
@@ -1172,12 +1139,6 @@
     }
 
     /* ─── Toggle info denda rusak ───────────────────────────────────────── */
-    window.toggleInfoDenda = function(kondisi) {
-        const infoEl = document.getElementById('infoDendaRusak');
-        if (!infoEl) return;
-        infoEl.style.display = kondisi === 'rusak' ? 'block' : 'none';
-    };
-
     /* ─── Peminjam: ajukan pengembalian ────────────────────────────────── */
     function showModalKembalikan(id) {
         const p = allPeminjaman.find(x => x.id === id);
@@ -1186,10 +1147,7 @@
         document.getElementById('kembalikanPeminjamanId').value = id;
 
         // Reset form
-        document.getElementById('kembalikanKondisi').value = '';
         document.getElementById('kembalikanKeterangan').value = '';
-        const infoEl = document.getElementById('infoDendaRusak');
-        if (infoEl) infoEl.style.display = 'none';
 
         // Isi ringkasan
         const rows = (p.detail_pinjam || []).map(d => `
@@ -1247,20 +1205,15 @@
 
         const peminjamanId = document.getElementById('kembalikanPeminjamanId').value;
         const tanggal      = document.getElementById('kembalikanTanggal').value;
-        const kondisi      = document.getElementById('kembalikanKondisi').value;
         const keterangan   = document.getElementById('kembalikanKeterangan').value || null;
 
         if (!tanggal) { alert('Tanggal dikembalikan wajib diisi'); return; }
-        if (!kondisi) { alert('Kondisi alat wajib dipilih'); return; }
 
-        // Payload sesuai StorePengembalianRequest:
-        // peminjaman_id, tanggal_kembali, kondisi_alat (baik|rusak), keterangan, denda
+        // Payload: hanya tanggal + keterangan — kondisi & denda diperiksa petugas
         const payload = {
             peminjaman_id:   parseInt(peminjamanId),
             tanggal_kembali: tanggal,
-            kondisi_alat:    kondisi,
             keterangan:      keterangan,
-            denda:           0,   // peminjam tidak input denda, petugas yang atur
         };
 
         const btn = document.getElementById('submitKembalikanPeminjamBtn');

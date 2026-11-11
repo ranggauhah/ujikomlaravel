@@ -13,6 +13,7 @@ class Pengembalian extends Model
 
     protected $fillable = [
         'peminjaman_id',
+        'status_pengecekan',
         'tanggal_kembali',
         'kondisi_alat',
         'keterangan',
