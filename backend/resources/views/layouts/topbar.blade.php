@@ -9,7 +9,7 @@
 
         {{-- ── Profil User (klik untuk ke halaman edit profil) ── --}}
         <a href="/profil" class="user-info" style="text-decoration:none; cursor:pointer;" title="Edit Profil">
-            <div class="user-avatar" id="headerAvatar">
+            <div class="user-avatar" id="headerAvatar" style="overflow:hidden; font-size:16px; font-weight:600;">
                 <i class="fas fa-user"></i>
             </div>
             <div class="user-details">

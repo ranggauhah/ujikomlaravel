@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -102,6 +103,54 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Profil berhasil diperbarui',
+            'data'    => new UserResource($user->fresh()),
+        ]);
+    }
+
+    /**
+     * Upload / ganti foto profil
+     */
+    public function uploadFoto(Request $request)
+    {
+        $request->validate([
+            'foto' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ]);
+
+        $user = $request->user();
+
+        // Hapus foto lama jika ada
+        if ($user->foto) {
+            Storage::disk('public')->delete($user->foto);
+        }
+
+        $file     = $request->file('foto');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $path     = $file->storeAs('foto_profil', $filename, 'public');
+
+        $user->update(['foto' => $path]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Foto profil berhasil diperbarui',
+            'data'    => new UserResource($user->fresh()),
+        ]);
+    }
+
+    /**
+     * Hapus foto profil
+     */
+    public function hapusFoto(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->foto) {
+            Storage::disk('public')->delete($user->foto);
+            $user->update(['foto' => null]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Foto profil berhasil dihapus',
             'data'    => new UserResource($user->fresh()),
         ]);
     }

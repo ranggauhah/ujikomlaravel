@@ -530,10 +530,23 @@ function initUserUI(options = {}) {
     setEl('sidebarUserName', user.name);
     setEl('sidebarUserRole', user.role);
 
-    // Set inisial avatar
+    // Set avatar: foto profil kalau ada, fallback ke inisial
     const initials = getUserInitials(user.name);
-    setEl('headerAvatar',  initials);
-    setEl('sidebarAvatar', initials);
+
+    function applyAvatar(avatarId, foto, initials) {
+        const el = document.getElementById(avatarId);
+        if (!el) return;
+        if (foto) {
+            el.innerHTML = `<img src="${foto}" alt="Foto Profil"
+                style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+                onerror="this.parentElement.innerHTML='${initials}'">`;
+        } else {
+            el.innerHTML = initials;
+        }
+    }
+
+    applyAvatar('headerAvatar',  user.foto, initials);
+    applyAvatar('sidebarAvatar', user.foto, initials);
 
     // Default hide-menu rules sesuai tabel modul UJIKOM:
     // Admin    : semua menu
@@ -557,9 +570,71 @@ function initUserUI(options = {}) {
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
+    // Sinkronisasi foto & data terbaru dari server (background, non-blocking)
+    syncUserFromServer();
+
     return user;
 }
 
 window.initUserUI = initUserUI;
+
+/**
+ * Refresh avatar & nama di header/sidebar berdasarkan localStorage terbaru.
+ * Panggil ini setelah update profil/foto agar semua halaman langsung sinkron.
+ */
+function refreshUserUI() {
+    const user = getUser();
+    if (!user) return;
+
+    const initials = getUserInitials(user.name);
+
+    // Update nama & role
+    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setEl('userName',        user.name);
+    setEl('userRole',        user.role);
+    setEl('sidebarUserName', user.name);
+    setEl('sidebarUserRole', user.role);
+
+    // Update avatar
+    function applyAvatar(avatarId, foto, initials) {
+        const el = document.getElementById(avatarId);
+        if (!el) return;
+        if (foto) {
+            el.innerHTML = `<img src="${foto}" alt="Foto Profil"
+                style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+                onerror="this.parentElement.innerHTML='${initials}'">`;
+        } else {
+            el.innerHTML = initials;
+        }
+    }
+
+    applyAvatar('headerAvatar',  user.foto, initials);
+    applyAvatar('sidebarAvatar', user.foto, initials);
+}
+
+window.refreshUserUI = refreshUserUI;
+
+/**
+ * Refresh user data dari server lalu update UI.
+ * Berguna untuk memastikan foto profil terbaru muncul di semua halaman.
+ */
+async function syncUserFromServer() {
+    const token = getToken();
+    if (!token) return;
+    try {
+        const res  = await fetch(`${CONFIG.API_URL}/auth/me`, {
+            headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+            setUser(json.data);
+            refreshUserUI();
+        }
+    } catch (e) {
+        // silent — jangan ganggu UX kalau gagal
+    }
+}
+
+window.syncUserFromServer = syncUserFromServer;
 
 console.log('✅ App.js loaded successfully');

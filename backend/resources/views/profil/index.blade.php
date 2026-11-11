@@ -22,19 +22,58 @@
                     </div>
                     <div class="card-body">
 
-                        {{-- Avatar --}}
+                        {{-- Avatar + Upload Foto --}}
                         <div style="display:flex; align-items:center; gap:16px; margin-bottom:28px;">
-                            <div id="profilAvatar" style="
-                                width:72px; height:72px; border-radius:50%;
-                                background:linear-gradient(135deg,var(--primary),var(--secondary));
-                                display:flex; align-items:center; justify-content:center;
-                                color:#fff; font-size:28px; font-weight:700; flex-shrink:0;">
-                                <i class="fas fa-user"></i>
+
+                            {{-- Lingkaran avatar yang bisa diklik --}}
+                            <div style="position:relative; flex-shrink:0;">
+                                <div id="profilAvatar" style="
+                                    width:80px; height:80px; border-radius:50%;
+                                    background:linear-gradient(135deg,var(--primary),var(--secondary));
+                                    display:flex; align-items:center; justify-content:center;
+                                    color:#fff; font-size:28px; font-weight:700;
+                                    overflow:hidden; cursor:pointer;
+                                    border:3px solid rgba(99,102,241,0.25);
+                                    transition:opacity .2s;"
+                                    onclick="document.getElementById('inputFoto').click()"
+                                    title="Klik untuk ganti foto">
+                                    <i class="fas fa-user" id="avatarIcon"></i>
+                                    <img id="avatarImg" src="" alt="Foto Profil"
+                                        style="display:none; width:100%; height:100%; object-fit:cover;">
+                                </div>
+                                {{-- overlay kamera --}}
+                                <div onclick="document.getElementById('inputFoto').click()" style="
+                                    position:absolute; bottom:0; right:0;
+                                    width:26px; height:26px; border-radius:50%;
+                                    background:var(--primary); border:2px solid #fff;
+                                    display:flex; align-items:center; justify-content:center;
+                                    cursor:pointer; color:#fff; font-size:11px;"
+                                    title="Ganti foto">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                                {{-- input file tersembunyi --}}
+                                <input type="file" id="inputFoto" accept="image/jpeg,image/png,image/jpg,image/webp"
+                                    style="display:none;" onchange="previewDanUploadFoto(event)">
                             </div>
-                            <div>
+
+                            <div style="flex:1; min-width:0;">
                                 <div id="profilNamaHeader" style="font-weight:700;font-size:18px;color:var(--gray-900);">Loading...</div>
                                 <div id="profilRoleHeader" style="font-size:13px;color:var(--gray-500);text-transform:capitalize;margin-top:2px;"></div>
                                 <div id="profilEmailHeader" style="font-size:13px;color:var(--gray-400);margin-top:2px;"></div>
+                                <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                                    <button type="button" onclick="document.getElementById('inputFoto').click()"
+                                        style="font-size:11px; padding:4px 10px; border-radius:20px;
+                                               background:rgba(99,102,241,0.1); color:var(--primary);
+                                               border:1px solid rgba(99,102,241,0.3); cursor:pointer; font-weight:600;">
+                                        <i class="fas fa-camera"></i> Ganti Foto
+                                    </button>
+                                    <button type="button" id="btnHapusFoto" onclick="hapusFotoProfil()"
+                                        style="display:none; font-size:11px; padding:4px 10px; border-radius:20px;
+                                               background:rgba(239,68,68,0.08); color:#ef4444;
+                                               border:1px solid rgba(239,68,68,0.25); cursor:pointer; font-weight:600;">
+                                        <i class="fas fa-trash"></i> Hapus Foto
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -146,11 +185,8 @@ async function loadProfil() {
         document.getElementById('profilRoleHeader').textContent  = u.role  || '-';
         document.getElementById('profilEmailHeader').textContent = u.email || '-';
 
-        // Inisial di avatar
-        const avatar = document.getElementById('profilAvatar');
-        if (u.name) {
-            avatar.textContent = u.name.charAt(0).toUpperCase();
-        }
+        // Foto atau inisial di avatar
+        setAvatar(u.foto, u.name);
     } catch (e) {
         showAlert('Gagal memuat data profil', 'danger');
     }
@@ -186,6 +222,7 @@ document.getElementById('formProfil').addEventListener('submit', async function 
                 u.email = json.data.email;
                 localStorage.setItem('user', JSON.stringify(u));
             }
+            if (typeof refreshUserUI === 'function') refreshUserUI();
             showAlert('Profil berhasil diperbarui!', 'success');
             loadProfil();
         } else {
@@ -261,6 +298,115 @@ function togglePass(inputId, btn) {
     } else {
         input.type   = 'password';
         icon.className = 'fas fa-eye';
+    }
+}
+
+// ── Helper: set avatar (foto atau inisial) ────────────────────────
+function setAvatar(fotoUrl, nama) {
+    const icon = document.getElementById('avatarIcon');
+    const img  = document.getElementById('avatarImg');
+    const btn  = document.getElementById('btnHapusFoto');
+
+    if (fotoUrl) {
+        img.src          = fotoUrl;
+        img.style.display = 'block';
+        icon.style.display = 'none';
+        btn.style.display  = 'inline-flex';
+    } else {
+        img.style.display  = 'none';
+        icon.style.display = '';
+        // tampilkan inisial
+        const avatar = document.getElementById('profilAvatar');
+        if (nama) {
+            icon.className = '';
+            icon.textContent = nama.charAt(0).toUpperCase();
+        } else {
+            icon.className = 'fas fa-user';
+            icon.textContent = '';
+        }
+        btn.style.display = 'none';
+    }
+}
+
+// ── Preview & upload foto langsung setelah dipilih ────────────────
+async function previewDanUploadFoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validasi ukuran di sisi klien (maks 2 MB)
+    if (file.size > 2 * 1024 * 1024) {
+        showAlert('Ukuran foto maksimal 2 MB', 'danger');
+        event.target.value = '';
+        return;
+    }
+
+    // Preview langsung via FileReader
+    const reader = new FileReader();
+    reader.onload = (e) => setAvatar(e.target.result, null);
+    reader.readAsDataURL(file);
+
+    // Upload ke server
+    const formData = new FormData();
+    formData.append('foto', file);
+
+    try {
+        const res  = await fetch(`${API_URL}/auth/profile/photo`, {
+            method:  'POST',
+            headers: { Authorization: `Bearer ${getToken()}` },
+            body:    formData,
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            // Update avatar dengan URL dari server
+            setAvatar(json.data.foto, json.data.name);
+            // Sync localStorage
+            const stored = localStorage.getItem('user');
+            if (stored) {
+                const u = JSON.parse(stored);
+                u.foto  = json.data.foto;
+                localStorage.setItem('user', JSON.stringify(u));
+            }
+            if (typeof refreshUserUI === 'function') refreshUserUI();
+            showAlert('Foto profil berhasil diperbarui!', 'success');
+        } else {
+            showAlert(json.message || 'Gagal mengunggah foto', 'danger');
+            loadProfil(); // kembalikan avatar semula
+        }
+    } catch (err) {
+        showAlert('Terjadi kesalahan saat mengunggah foto', 'danger');
+        loadProfil();
+    } finally {
+        event.target.value = ''; // reset input agar file yang sama bisa dipilih ulang
+    }
+}
+
+// ── Hapus foto profil ─────────────────────────────────────────────
+async function hapusFotoProfil() {
+    if (!confirm('Hapus foto profil?')) return;
+
+    try {
+        const res  = await fetch(`${API_URL}/auth/profile/photo`, {
+            method:  'DELETE',
+            headers: { Authorization: `Bearer ${getToken()}` },
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            setAvatar(null, document.getElementById('profilNamaHeader').textContent);
+            const stored = localStorage.getItem('user');
+            if (stored) {
+                const u = JSON.parse(stored);
+                u.foto  = null;
+                localStorage.setItem('user', JSON.stringify(u));
+            }
+            if (typeof refreshUserUI === 'function') refreshUserUI();
+            showAlert('Foto profil berhasil dihapus', 'success');
+        } else {
+            showAlert(json.message || 'Gagal menghapus foto', 'danger');
+        }
+    } catch (err) {
+        showAlert('Terjadi kesalahan saat menghapus foto', 'danger');
     }
 }
 

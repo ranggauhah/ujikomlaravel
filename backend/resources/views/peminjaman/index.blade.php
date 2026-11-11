@@ -495,6 +495,28 @@
         return p.detail_pinjam.map(d => d.alat?.nama_alat || '-').join(', ');
     }
 
+    /* Avatar user: foto kalau ada, fallback inisial */
+    function buildUserAvatar(u) {
+        const initials = (u?.name || 'U')[0].toUpperCase();
+        const baseStyle = 'width:36px;height:36px;border-radius:50%;flex-shrink:0;' +
+                          'background:linear-gradient(135deg,#667eea,#764ba2);' +
+                          'display:flex;align-items:center;justify-content:center;' +
+                          'color:white;font-weight:700;font-size:14px;overflow:hidden;';
+
+        // u.foto sudah berupa URL lengkap dari UserResource (via Storage::url())
+        // contoh: /storage/foto_profil/xxx.jpg
+        const fotoUrl = u?.foto || null;
+
+        if (fotoUrl) {
+            return `<div style="${baseStyle}">
+                        <img src="${fotoUrl}" alt="${initials}"
+                             style="width:100%;height:100%;object-fit:cover;"
+                             onerror="this.parentElement.innerHTML='${initials}'">
+                    </div>`;
+        }
+        return `<div style="${baseStyle}">${initials}</div>`;
+    }
+
     function statusBadge(status) {
         const map = {
             menunggu:     ['primary', 'hourglass-half',    'Menunggu'],
@@ -818,12 +840,7 @@
                 <td><strong>#${p.id}</strong></td>
                 <td>
                     <div style="display:flex;align-items:center;gap:10px;">
-                        <div style="width:36px;height:36px;border-radius:50%;
-                                    background:linear-gradient(135deg,#667eea,#764ba2);
-                                    display:flex;align-items:center;justify-content:center;
-                                    color:white;font-weight:700;font-size:14px;">
-                            ${(p.user?.name || 'U')[0].toUpperCase()}
-                        </div>
+                        ${buildUserAvatar(p.user)}
                         <div>
                             <div style="font-weight:600;">${p.user?.name || '-'}</div>
                             <div style="font-size:12px;color:var(--gray-500);">${p.user?.email || ''}</div>

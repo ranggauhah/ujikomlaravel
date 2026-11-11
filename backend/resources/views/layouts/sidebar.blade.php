@@ -46,7 +46,7 @@
         <a href="/profil" class="user-profile" style="text-decoration:none; cursor:pointer; transition: background 0.2s;"
            onmouseover="this.style.background='rgba(99,102,241,0.08)'"
            onmouseout="this.style.background=''">
-            <div class="user-profile-avatar" id="sidebarAvatar">
+            <div class="user-profile-avatar" id="sidebarAvatar" style="overflow:hidden; font-size:16px; font-weight:600; flex-shrink:0;">
                 <i class="fas fa-user"></i>
             </div>
             <div class="user-profile-info">
