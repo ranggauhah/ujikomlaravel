@@ -269,16 +269,24 @@
                             return `<span>${p.tanggal_harus_kembali}</span>`;
                         })()}</td>
                         <td>
-                            <span class="badge badge-${
-                                p.status === 'dikembalikan' ? 'success' : 
-                                p.status === 'terlambat' ? 'danger' : 'warning'
-                            }">
-                                <i class="fas fa-${
-                                    p.status === 'dikembalikan' ? 'check-circle' : 
-                                    p.status === 'terlambat' ? 'exclamation-circle' : 'clock'
-                                }"></i>
-                                ${p.status}
-                            </span>
+                            ${(() => {
+                                if (p.status === 'dikembalikan') {
+                                    if (p.pengembalian?.status_pengecekan === 'menunggu_pengecekan') {
+                                        return `<span class="badge" style="background:rgba(99,102,241,0.12);color:var(--primary);">
+                                            <i class="fas fa-hourglass-half"></i> Menunggu Pengecekan</span>`;
+                                    }
+                                    return `<span class="badge badge-success">
+                                        <i class="fas fa-check-circle"></i> Dikembalikan</span>`;
+                                }
+                                const map = {
+                                    menunggu:  ['warning',  'hourglass-half',    'Menunggu Persetujuan'],
+                                    dipinjam:  ['warning',  'clock',             'Dipinjam'],
+                                    terlambat: ['danger',   'exclamation-circle','Terlambat'],
+                                    ditolak:   ['danger',   'times-circle',      'Ditolak'],
+                                };
+                                const [c, ic, lbl] = map[p.status] || ['primary','question', p.status];
+                                return `<span class="badge badge-${c}"><i class="fas fa-${ic}"></i> ${lbl}</span>`;
+                            })()}
                         </td>
                     </tr>
                 `).join('');

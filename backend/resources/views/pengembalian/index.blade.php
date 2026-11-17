@@ -523,8 +523,17 @@
             const data = await res.json();
 
             if (data.success) {
+                // Optimistic update: langsung update local state agar UI responsif
+                const idx = allPeminjaman.findIndex(x =>
+                    x.pengembalian?.id === parseInt(pengembalianId));
+                if (idx !== -1 && allPeminjaman[idx].pengembalian) {
+                    allPeminjaman[idx].pengembalian.status_pengecekan = 'selesai';
+                    allPeminjaman[idx].pengembalian.kondisi_alat       = kondisi;
+                    allPeminjaman[idx].pengembalian.denda              = denda;
+                }
                 tutupVerifikasi();
-                await loadData();
+                applyFilter();      // render ulang dengan data lokal yang sudah di-update
+                await loadData();   // lalu sinkronisasi penuh dari server
                 alert('Verifikasi berhasil disimpan!');
             } else {
                 const msg = data.errors

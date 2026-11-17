@@ -484,15 +484,23 @@
         return `<div style="${baseStyle}">${initials}</div>`;
     }
 
-    function statusBadge(status) {
+    function statusBadge(p) {
+        // Jika sudah dikembalikan, bedakan antara menunggu pengecekan vs sudah selesai
+        if (p.status === 'dikembalikan') {
+            if (p.pengembalian?.status_pengecekan === 'menunggu_pengecekan') {
+                return `<span class="badge" style="background:rgba(99,102,241,0.12);color:var(--primary);">
+                            <i class="fas fa-hourglass-half"></i> Menunggu Pengecekan</span>`;
+            }
+            return `<span class="badge badge-success">
+                        <i class="fas fa-check-circle"></i> Dikembalikan</span>`;
+        }
         const map = {
-            menunggu:     ['primary', 'hourglass-half',    'Menunggu'],
-            dipinjam:     ['warning', 'clock',             'Dipinjam'],
-            dikembalikan: ['success', 'check-circle',      'Dikembalikan'],
-            terlambat:    ['danger',  'exclamation-circle','Terlambat'],
-            ditolak:      ['danger',  'times-circle',      'Ditolak'],
+            menunggu:  ['primary', 'hourglass-half',    'Menunggu Persetujuan'],
+            dipinjam:  ['warning', 'clock',             'Dipinjam'],
+            terlambat: ['danger',  'exclamation-circle','Terlambat'],
+            ditolak:   ['danger',  'times-circle',      'Ditolak'],
         };
-        const [c, ic, label] = map[status] || ['primary', 'question', status];
+        const [c, ic, label] = map[p.status] || ['primary', 'question', p.status];
         return `<span class="badge badge-${c}"><i class="fas fa-${ic}"></i> ${label}</span>`;
     }
 
@@ -823,7 +831,7 @@
                 </td>
                 <td style="white-space:nowrap;">${p.tanggal_pinjam || '-'}</td>
                 <td>${deadlineHtml}</td>
-                <td>${statusBadge(p.status)}</td>
+                <td>${statusBadge(p)}</td>
                 <td>
                     <div class="action-buttons">
                         <button class="btn-icon btn-view"
@@ -999,7 +1007,7 @@
                 </div>
                 <div style="padding:14px;background:var(--gray-50);border-radius:10px;">
                     <div style="font-size:12px;color:var(--gray-500);margin-bottom:8px;">Status</div>
-                    ${statusBadge(p.status)}
+                    ${statusBadge(p)}
                 </div>
                 ${p.pengembalian ? `
                 <div style="padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;">

@@ -82,9 +82,10 @@
         const menuUsers = document.getElementById('menuUsers');
         if (menuUsers) menuUsers.style.display = u.role === 'admin' ? '' : 'none';
 
-        // Laporan — hanya petugas
+        // Laporan — petugas & admin
         const menuLaporan = document.getElementById('menuLaporan');
-        if (menuLaporan) menuLaporan.style.display = u.role === 'petugas' ? '' : 'none';
+        if (menuLaporan) menuLaporan.style.display =
+            (u.role === 'petugas' || u.role === 'admin') ? '' : 'none';
 
         // Log Aktivitas — hanya admin
         const menuLog = document.getElementById('menuLogAktivitas');

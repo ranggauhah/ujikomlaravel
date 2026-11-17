@@ -205,8 +205,8 @@
 
     const user = initUserUI();
     if (!user) return;
-    // Laporan hanya untuk Petugas
-    if (user.role !== 'petugas') {
+    // Laporan untuk Petugas & Admin
+    if (user.role !== 'petugas' && user.role !== 'admin') {
         window.location.href = '/dashboard';
         return;
     }
@@ -362,16 +362,20 @@
                     </td>
                     <td>${durasi}</td>
                     <td>
-                        <span class="badge badge-${
-                            p.status === 'dikembalikan' ? 'success' : 
-                            p.status === 'terlambat' ? 'danger' : 'warning'
-                        }">
-                            <i class="fas fa-${
-                                p.status === 'dikembalikan' ? 'check-circle' : 
-                                p.status === 'terlambat' ? 'exclamation-circle' : 'clock'
-                            }"></i>
-                            ${p.status}
-                        </span>
+                        ${(() => {
+                            if (p.status === 'dikembalikan') {
+                                return `<span class="badge badge-success">
+                                    <i class="fas fa-check-circle"></i> Dikembalikan</span>`;
+                            }
+                            const map = {
+                                menunggu:  ['warning', 'hourglass-half',    'Menunggu'],
+                                dipinjam:  ['warning', 'clock',             'Dipinjam'],
+                                terlambat: ['danger',  'exclamation-circle','Terlambat'],
+                                ditolak:   ['danger',  'times-circle',      'Ditolak'],
+                            };
+                            const [c, ic, lbl] = map[p.status] || ['primary','question', p.status];
+                            return `<span class="badge badge-${c}"><i class="fas fa-${ic}"></i> ${lbl}</span>`;
+                        })()}
                     </td>
                 </tr>
             `;
@@ -462,7 +466,14 @@
             if (p.tanggal_pinjam && p.tanggal_harus_kembali) {
                 durasi = Math.ceil((new Date(p.tanggal_harus_kembali) - new Date(p.tanggal_pinjam)) / (1000 * 60 * 60 * 24)) + ' hari';
             }
-            const statusColor = p.status === 'dikembalikan' ? '#10b981' : p.status === 'terlambat' ? '#ef4444' : '#f59e0b';
+            const statusMap = {
+                dikembalikan: { color: '#10b981', label: 'Dikembalikan' },
+                dipinjam:     { color: '#f59e0b', label: 'Dipinjam' },
+                menunggu:     { color: '#f59e0b', label: 'Menunggu' },
+                terlambat:    { color: '#ef4444', label: 'Terlambat' },
+                ditolak:      { color: '#ef4444', label: 'Ditolak' },
+            };
+            const st = statusMap[p.status] || { color: '#6b7280', label: p.status };
             return `
                 <tr style="border-bottom: 1px solid #e5e7eb;">
                     <td style="padding: 10px 12px;">${i + 1}</td>
@@ -471,7 +482,7 @@
                     <td style="padding: 10px 12px; font-weight: 600;">${p.user?.name || '-'}</td>
                     <td style="padding: 10px 12px;">${p.keperluan || '-'}</td>
                     <td style="padding: 10px 12px;">${durasi}</td>
-                    <td style="padding: 10px 12px;"><span style="color: ${statusColor}; font-weight: 600;">${p.status}</span></td>
+                    <td style="padding: 10px 12px;"><span style="color: ${st.color}; font-weight: 600;">${st.label}</span></td>
                 </tr>
             `;
         }).join('');
