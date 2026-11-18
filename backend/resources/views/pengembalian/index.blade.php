@@ -133,16 +133,15 @@
                 <select id="verifikasiKondisi" required onchange="onKondisiChange(this.value)">
                     <option value="">-- Pilih Kondisi --</option>
                     <option value="baik">✅ Baik — alat kembali dalam kondisi normal</option>
+                    <option value="terlambat">⏰ Terlambat — alat dikembalikan melebihi batas waktu</option>
                     <option value="rusak">⚠️ Rusak — alat mengalami kerusakan</option>
                 </select>
             </div>
 
-            <!-- Denda (muncul jika rusak) -->
+            <!-- Denda (muncul jika rusak atau terlambat) -->
             <div id="verifikasiDendaGroup" style="display:none;">
-                <div style="padding:12px 14px;background:#fee2e2;border:1px solid #fca5a5;
-                             border-radius:10px;margin-bottom:14px;font-size:13px;color:#991b1b;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Alat rusak — tentukan nominal denda yang harus dibayar peminjam.
+                <div id="verifikasiDendaInfo" style="padding:12px 14px;border-radius:10px;
+                             margin-bottom:14px;font-size:13px;">
                 </div>
                 <div class="form-group">
                     <label for="verifikasiDenda">
@@ -321,8 +320,8 @@
                     </span>`;
             } else if (sudahVerifikasi) {
                 const kond = p.pengembalian.kondisi_alat;
-                kondisiHtml = kond === 'rusak'
-                    ? `<div>
+                if (kond === 'rusak') {
+                    kondisiHtml = `<div>
                            <span class="badge badge-danger" style="margin-bottom:4px;">
                                <i class="fas fa-times-circle"></i> Rusak
                            </span>
@@ -334,10 +333,26 @@
                                : `<div style="font-size:12px;color:var(--warning);margin-top:2px;">
                                       <i class="fas fa-clock"></i> Denda belum ditetapkan
                                   </div>`}
-                       </div>`
-                    : `<span class="badge badge-success">
+                       </div>`;
+                } else if (kond === 'terlambat') {
+                    kondisiHtml = `<div>
+                           <span class="badge badge-warning" style="margin-bottom:4px;">
+                               <i class="fas fa-clock"></i> Terlambat
+                           </span>
+                           ${p.pengembalian.denda > 0
+                               ? `<div style="font-size:13px;font-weight:700;color:var(--warning);margin-top:2px;">
+                                      <i class="fas fa-coins"></i>
+                                      Rp ${Number(p.pengembalian.denda).toLocaleString('id-ID')}
+                                  </div>`
+                               : `<div style="font-size:12px;color:var(--gray-500);margin-top:2px;">
+                                      Tanpa denda
+                                  </div>`}
+                       </div>`;
+                } else {
+                    kondisiHtml = `<span class="badge badge-success">
                            <i class="fas fa-check-circle"></i> Baik
                        </span>`;
+                }
             }
 
             /* ── Kolom Aksi ── */
@@ -499,10 +514,21 @@
     };
 
     window.onKondisiChange = function(val) {
-        const rusak = val === 'rusak';
-        document.getElementById('verifikasiDendaGroup').style.display =
-            rusak ? 'block' : 'none';
-        if (!rusak) document.getElementById('verifikasiDenda').value = 0;
+        const perluDenda = val === 'rusak' || val === 'terlambat';
+        const group = document.getElementById('verifikasiDendaGroup');
+        const info  = document.getElementById('verifikasiDendaInfo');
+
+        group.style.display = perluDenda ? 'block' : 'none';
+
+        if (val === 'rusak') {
+            info.style.cssText = 'padding:12px 14px;background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;margin-bottom:14px;font-size:13px;color:#991b1b;';
+            info.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Alat rusak — tentukan nominal denda yang harus dibayar peminjam.';
+        } else if (val === 'terlambat') {
+            info.style.cssText = 'padding:12px 14px;background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;margin-bottom:14px;font-size:13px;color:#92400e;';
+            info.innerHTML = '<i class="fas fa-clock"></i> Terlambat — tentukan nominal denda keterlambatan jika ada.';
+        }
+
+        if (!perluDenda) document.getElementById('verifikasiDenda').value = 0;
     };
 
     /* ─── Submit Verifikasi ──────────────────────────────────────────────── */
@@ -515,8 +541,9 @@
         const keterangan     = document.getElementById('verifikasiKeterangan').value || null;
 
         if (!kondisi) { alert('Kondisi alat wajib dipilih'); return; }
-        if (kondisi === 'rusak' && denda <= 0) {
-            if (!confirm('Kondisi rusak tapi denda 0. Lanjutkan?')) return;
+        if ((kondisi === 'rusak' || kondisi === 'terlambat') && denda <= 0) {
+            const label = kondisi === 'rusak' ? 'rusak' : 'terlambat';
+            if (!confirm(`Kondisi ${label} tapi denda 0. Lanjutkan?`)) return;
         }
 
         const btn = document.getElementById('btnSubmitVerifikasi');

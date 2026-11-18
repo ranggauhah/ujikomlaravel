@@ -127,7 +127,7 @@ class PengembalianController extends Controller
     public function update(Request $request, Pengembalian $pengembalian)
     {
         $validated = $request->validate([
-            'kondisi_alat' => 'required|in:baik,rusak',
+            'kondisi_alat' => 'required|in:baik,rusak,terlambat',
             'keterangan'   => 'nullable|string',
             'denda'        => 'nullable|numeric|min:0',
         ]);
@@ -150,9 +150,10 @@ class PengembalianController extends Controller
                 $alat = Alat::find($detail->alat_id);
                 if (!$alat) continue;
 
-                if ($validated['kondisi_alat'] === 'baik') {
+                if ($validated['kondisi_alat'] === 'baik' || $validated['kondisi_alat'] === 'terlambat') {
+                    // Baik / terlambat: stok kembali, kondisi alat tidak berubah
                     $alat->update([
-                        'jumlah'  => $alat->jumlah + $detail->jumlah_pinjam,
+                        'jumlah' => $alat->jumlah + $detail->jumlah_pinjam,
                     ]);
                 } else {
                     // Rusak: stok kembali tapi tandai alat rusak
@@ -163,13 +164,16 @@ class PengembalianController extends Controller
                 }
             }
 
+            // Denda berlaku untuk rusak dan terlambat
+            $dendaFinal = in_array($validated['kondisi_alat'], ['rusak', 'terlambat'])
+                ? ($validated['denda'] ?? 0)
+                : 0;
+
             // Simpan hasil verifikasi
             $pengembalian->update([
                 'kondisi_alat'     => $validated['kondisi_alat'],
                 'keterangan'       => $validated['keterangan'] ?? $pengembalian->keterangan,
-                'denda'            => $validated['kondisi_alat'] === 'rusak'
-                                        ? ($validated['denda'] ?? 0)
-                                        : 0,
+                'denda'            => $dendaFinal,
                 'status_pengecekan'=> 'selesai',
             ]);
 
