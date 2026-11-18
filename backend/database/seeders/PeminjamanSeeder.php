@@ -26,11 +26,11 @@ class PeminjamanSeeder extends Seeder
 
         // --- Peminjaman 1: sudah dikembalikan ---
         $p1 = Peminjaman::create([
-            'user_id'         => $peminjam->id,
-            'tanggal_pinjam'  => Carbon::now()->subDays(10)->toDateString(),
-            'tanggal_kembali' => Carbon::now()->subDays(3)->toDateString(),
-            'status'          => 'dikembalikan',
-            'keperluan'       => 'Praktikum jaringan komputer semester 4',
+            'user_id'               => $peminjam->id,
+            'tanggal_pinjam'        => Carbon::now()->subDays(10)->toDateString(),
+            'tanggal_harus_kembali' => Carbon::now()->subDays(3)->toDateString(),
+            'status'                => 'dikembalikan',
+            'keperluan'             => 'Praktikum jaringan komputer semester 4',
         ]);
         DetailPinjam::create([
             'peminjaman_id' => $p1->id,
@@ -54,11 +54,11 @@ class PeminjamanSeeder extends Seeder
 
         // --- Peminjaman 2: masih dipinjam ---
         $p2 = Peminjaman::create([
-            'user_id'         => $peminjam->id,
-            'tanggal_pinjam'  => Carbon::now()->subDays(5)->toDateString(),
-            'tanggal_kembali' => Carbon::now()->addDays(2)->toDateString(),
-            'status'          => 'dipinjam',
-            'keperluan'       => 'Tugas akhir - pengembangan sistem embedded',
+            'user_id'               => $peminjam->id,
+            'tanggal_pinjam'        => Carbon::now()->subDays(5)->toDateString(),
+            'tanggal_harus_kembali' => Carbon::now()->addDays(2)->toDateString(),
+            'status'                => 'dipinjam',
+            'keperluan'             => 'Tugas akhir - pengembangan sistem embedded',
         ]);
         DetailPinjam::create([
             'peminjaman_id' => $p2->id,
@@ -68,11 +68,11 @@ class PeminjamanSeeder extends Seeder
 
         // --- Peminjaman 3: petugas, sudah dikembalikan ---
         $p3 = Peminjaman::create([
-            'user_id'         => $petugas->id,
-            'tanggal_pinjam'  => Carbon::now()->subDays(15)->toDateString(),
-            'tanggal_kembali' => Carbon::now()->subDays(8)->toDateString(),
-            'status'          => 'dikembalikan',
-            'keperluan'       => 'Instalasi perangkat lab baru',
+            'user_id'               => $petugas->id,
+            'tanggal_pinjam'        => Carbon::now()->subDays(15)->toDateString(),
+            'tanggal_harus_kembali' => Carbon::now()->subDays(8)->toDateString(),
+            'status'                => 'dikembalikan',
+            'keperluan'             => 'Instalasi perangkat lab baru',
         ]);
         DetailPinjam::create([
             'peminjaman_id' => $p3->id,
@@ -89,11 +89,11 @@ class PeminjamanSeeder extends Seeder
 
         // --- Peminjaman 4: terlambat ---
         $p4 = Peminjaman::create([
-            'user_id'         => $peminjam->id,
-            'tanggal_pinjam'  => Carbon::now()->subDays(20)->toDateString(),
-            'tanggal_kembali' => Carbon::now()->subDays(5)->toDateString(),
-            'status'          => 'terlambat',
-            'keperluan'       => 'Penelitian skripsi - pengukuran sinyal',
+            'user_id'               => $peminjam->id,
+            'tanggal_pinjam'        => Carbon::now()->subDays(20)->toDateString(),
+            'tanggal_harus_kembali' => Carbon::now()->subDays(5)->toDateString(),
+            'status'                => 'terlambat',
+            'keperluan'             => 'Penelitian skripsi - pengukuran sinyal',
         ]);
         DetailPinjam::create([
             'peminjaman_id' => $p4->id,
@@ -103,11 +103,11 @@ class PeminjamanSeeder extends Seeder
 
         // --- Peminjaman 5: baru dipinjam hari ini ---
         $p5 = Peminjaman::create([
-            'user_id'         => $admin->id,
-            'tanggal_pinjam'  => Carbon::now()->toDateString(),
-            'tanggal_kembali' => Carbon::now()->addDays(7)->toDateString(),
-            'status'          => 'dipinjam',
-            'keperluan'       => 'Demo presentasi kepada tamu sekolah',
+            'user_id'               => $admin->id,
+            'tanggal_pinjam'        => Carbon::now()->toDateString(),
+            'tanggal_harus_kembali' => Carbon::now()->addDays(7)->toDateString(),
+            'status'                => 'dipinjam',
+            'keperluan'             => 'Demo presentasi kepada tamu sekolah',
         ]);
         DetailPinjam::create([
             'peminjaman_id' => $p5->id,
@@ -117,11 +117,11 @@ class PeminjamanSeeder extends Seeder
 
         // --- Peminjaman 6: sudah dikembalikan dengan denda ---
         $p6 = Peminjaman::create([
-            'user_id'         => $peminjam->id,
-            'tanggal_pinjam'  => Carbon::now()->subDays(30)->toDateString(),
-            'tanggal_kembali' => Carbon::now()->subDays(18)->toDateString(),
-            'status'          => 'dikembalikan',
-            'keperluan'       => 'Perbaikan perangkat laboratorium',
+            'user_id'               => $peminjam->id,
+            'tanggal_pinjam'        => Carbon::now()->subDays(30)->toDateString(),
+            'tanggal_harus_kembali' => Carbon::now()->subDays(18)->toDateString(),
+            'status'                => 'dikembalikan',
+            'keperluan'             => 'Perbaikan perangkat laboratorium',
         ]);
         DetailPinjam::create([
             'peminjaman_id' => $p6->id,

@@ -13,11 +13,11 @@ class PeminjamanFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'        => User::factory(),
-            'tanggal_pinjam' => now()->toDateString(),
-            'tanggal_kembali'=> now()->addDays(7)->toDateString(),
-            'status'         => 'menunggu',
-            'keperluan'      => $this->faker->sentence(),
+            'user_id'               => User::factory(),
+            'tanggal_pinjam'        => now()->toDateString(),
+            'tanggal_harus_kembali' => now()->addDays(7)->toDateString(),
+            'status'                => 'menunggu',
+            'keperluan'             => $this->faker->sentence(),
         ];
     }
 
@@ -29,8 +29,8 @@ class PeminjamanFactory extends Factory
     public function terlambat(): static
     {
         return $this->state([
-            'status'         => 'terlambat',
-            'tanggal_kembali'=> now()->subDays(3)->toDateString(),
+            'status'                => 'terlambat',
+            'tanggal_harus_kembali' => now()->subDays(3)->toDateString(),
         ]);
     }
 
