@@ -358,10 +358,16 @@
                         <i class="fas fa-clipboard-check"></i> Periksa Kondisi
                     </button>`;
             } else if (sudahVerifikasi) {
-                // Sudah selesai — tampilkan tanda selesai
-                aksiHtml = `<span style="color:var(--success);font-size:13px;font-weight:600;">
-                                <i class="fas fa-check-circle"></i> Selesai
-                            </span>`;
+                // Sudah selesai — tombol disabled, tidak bisa diklik
+                aksiHtml = `
+                    <button disabled
+                            style="white-space:nowrap;padding:8px 16px;
+                                   background:var(--gray-100);
+                                   color:var(--gray-400);border:1px solid var(--gray-200);
+                                   border-radius:8px;cursor:not-allowed;
+                                   font-weight:600;font-size:13px;opacity:0.7;">
+                        <i class="fas fa-check-circle" style="color:var(--success);"></i> Sudah Diverifikasi
+                    </button>`;
             }
 
             return `<tr>
@@ -430,6 +436,12 @@
     window.bukaVerifikasi = function(peminjamanId) {
         const p = allPeminjaman.find(x => x.id === peminjamanId);
         if (!p || !p.pengembalian) return;
+
+        // Guard: jika sudah diverifikasi, tolak pembukaan modal
+        if (p.pengembalian.status_pengecekan === 'selesai') {
+            alert('Pengembalian ini sudah diverifikasi dan tidak bisa diubah lagi.');
+            return;
+        }
 
         document.getElementById('verifikasiPengembalianId').value = p.pengembalian.id;
 
